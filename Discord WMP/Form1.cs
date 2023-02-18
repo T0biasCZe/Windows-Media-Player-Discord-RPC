@@ -34,7 +34,7 @@ namespace Discord_WMP {
         const int SW_SHOW = 5;
         string playeddata = "played data:";
         private void SmoothingText_Paint(object sender, PaintEventArgs e) {
-            Console.WriteLine("draw function ran");
+            //Console.WriteLine("draw function ran");
             //clear previously drawed text
             e.Graphics.Clear(Color.White);
             Font TextFont = new Font("Terminal", 8);
@@ -43,7 +43,7 @@ namespace Discord_WMP {
         }
 
         public Form1() {
-            Console.SetWindowSize(80, 20);
+            Console.SetWindowSize(50, 15);
             InitializeComponent();
 
             rm.Dock = DockStyle.Fill;
@@ -143,6 +143,11 @@ namespace Discord_WMP {
                 var position = data[4];
                 var lenght_num = Convert.ToDouble(data[5]);
                 var position_num = Convert.ToDouble(data[6]);
+                if(lenght_num == -1 || position_num == -1) { 
+                    playeddata = "Couldnt find WMP";
+                    this.Refresh();
+                    goto skip;
+                }
                 var mil = position_num / lenght_num;
                 var time = position + "/" + lenght;
                 var playbar = progressbar(mil, 10);
@@ -170,6 +175,7 @@ namespace Discord_WMP {
                     }
                 });
                 Console.WriteLine("set data");
+            skip:;
             }
         }
 
@@ -195,18 +201,6 @@ namespace Discord_WMP {
 
             //Connect to the RPC
             client.Initialize();
-
-            //Set the rich presence
-            //Call this as many times as you want and anywhere in your code.
-            client.SetPresence(new RichPresence() {
-                Details = "Example Project",
-                State = "csharp example",
-                Assets = new Assets() {
-                    LargeImageKey = "image_large",
-                    LargeImageText = "Lachee's Discord IPC Library",
-                    SmallImageKey = "image_small"
-                }
-            });
         }
 
         private void Form1_Load(object sender, EventArgs e) {
