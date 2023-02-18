@@ -3,7 +3,7 @@
 * take info from running WMP instance and put it into discord
 * minimize onto tray (press minimize button on top right)
 * smart album art manager
-![obrazek](https://user-images.githubusercontent.com/44525446/219904444-f175a8a9-c997-4ccf-bdbb-d8b77b2b53dd.png)
+![obrazek](https://user-images.githubusercontent.com/44525446/219904733-222e0ec0-655f-4a37-adde-f14b7a2f8c6c.png)
 
 # Album art manager
 
