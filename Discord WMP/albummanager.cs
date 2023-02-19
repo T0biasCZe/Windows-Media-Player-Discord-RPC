@@ -18,18 +18,18 @@ namespace Discord_WMP {
                 csv.Read();
                 csv.ReadHeader();
                 pairList = csv.GetRecords<pair>().ToList();
-                try {
-                    pair per = pairList[0];
+                //try {
+                    //pair per = pairList[0];
                     //MessageBox.Show(per.album);
-                }
-                catch{
-                    attempts++;
-                    if(attempts > 10) {
-                        MessageBox.Show("Failed to load album art list");
-                        return;
-                    }
-                    else LoadListFromCsv();
-                }
+                //}
+                //catch{
+                    //attempts++;
+                    //if(attempts > 100) {
+                        //MessageBox.Show("Failed to load album art list");
+                        //return;
+                    //}
+                    //else LoadListFromCsv();
+                //}
             }
         }
         public void writecsv() {
