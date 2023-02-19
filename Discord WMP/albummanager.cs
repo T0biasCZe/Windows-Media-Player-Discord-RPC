@@ -46,19 +46,19 @@ namespace Discord_WMP {
                 foreach(pair per in pairList) {
                     if(per.priority == i) {
                         if(per.type == pairtype.albumstring) {
-                            if(per.album == album) {
+                            if(per.album.Trim().ToLower() == album.Trim().ToLower()) {
                                 return per.filename;
                             }
                         }
                         else if(per.type == pairtype.albumcontains) {
-                            if(album.Contains(per.contains)) {
-                                if(per.doesntcontain.Length > 1) if(!album.Contains(per.doesntcontain)) continue;
+                            if(album.Contains(per.contains, StringComparison.OrdinalIgnoreCase)) {
+                                if(per.doesntcontain.Length > 1) if(!album.Contains(per.doesntcontain, StringComparison.OrdinalIgnoreCase)) continue;
                                 return per.filename;
                             }
                         }
                         else if(per.type == pairtype.titlecontains) {
-                            if(title.Contains(per.contains)) {
-                                if(per.doesntcontain.Length > 1) if(!title.Contains(per.doesntcontain)) continue;
+                            if(title.Contains(per.contains, StringComparison.OrdinalIgnoreCase)) {
+                                if(per.doesntcontain.Length > 1) if(!title.Contains(per.doesntcontain, StringComparison.OrdinalIgnoreCase)) continue;
                                 return per.filename;
                             }
                         }
@@ -66,6 +66,11 @@ namespace Discord_WMP {
                 }
             }
             return "wmp_empty";
+        }
+    }
+    public static class StringExtensions {
+        public static bool Contains(this string source, string toCheck, StringComparison comp) {
+            return source?.IndexOf(toCheck, comp) >= 0;
         }
     }
 }
