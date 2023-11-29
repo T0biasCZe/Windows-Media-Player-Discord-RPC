@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Text;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -12,19 +14,25 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using DiscordRPC;
 using DiscordRPC.Logging;
+using Windows.Media;
+using Windows.Media.Playback;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Discord_WMP {
     public partial class Form1 : Form {
         albummanager AlbumManager = new albummanager();
-        RemotedWindowsMediaPlayer rm = new RemotedWindowsMediaPlayer();
+        public RemotedWindowsMediaPlayer rm = new RemotedWindowsMediaPlayer();
+        //RemotedWindowsMediaPlayer rm;
         private bool show_author;
         private bool show_title;
         private bool show_album;
         private bool show_albumart;
         private bool show_progressbar;
+        private bool send_media_info;
         public DiscordRpcClient client;
-        [DllImport("kernel32.dll")]
+        public static int random_port;
+
+		[DllImport("kernel32.dll")]
         static extern IntPtr GetConsoleWindow();
 
         [DllImport("user32.dll")]
@@ -43,10 +51,19 @@ namespace Discord_WMP {
         }
 
         public Form1() {
+            Random random = new Random();
+            random_port = random.Next(49152, 65535);
             Console.SetWindowSize(50, 15);
             InitializeComponent();
 
-            rm.Dock = DockStyle.Fill;
+            /*//play music in axWindowsMediaPlayer1
+            axWindowsMediaPlayer1.URL = "C:\\Users\\user\\Music\\hudba\\Sonic Forces\\Fading World - Imperial Tower - Tomoya Ohtani feat. Madeleine Wood & B-BANDJ.flac";
+            //set axWindowsMediaPlayer1 visualisation to album art
+            axWindowsMediaPlayer1.uiMode = "full";*/
+
+
+			rm.Dock = DockStyle.Fill;
+
             panel1.Controls.Add(rm);
             panel1.Refresh();
             panel1.Update();
@@ -64,15 +81,23 @@ namespace Discord_WMP {
             settingsload();
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.SmoothingText_Paint);
         }
-        public string[] Data() {
-            var title = "";
-            var album = "";
-            var artist = "";
+        public struct playback_data {
+            public string title;
+			public string album;
+			public string artist;
 
-            var lenght = "";
-            var position = "";
-            double lenght_sec = -1;
-            double position_sec = -1;
+			public string lenght;
+			public string position;
+			public double lenght_sec;
+			public double position_sec;
+            public bool is_playing;
+
+            public string guid;
+            public string path;
+		}
+        public playback_data Data() {
+            playback_data data = new playback_data();
+            data.artist = ""; data.album = ""; data.title = ""; data.lenght = ""; data.position = ""; data.lenght_sec = -1; data.position_sec = -1; data.is_playing = false; data.guid = ""; data.path = "";
             // Get the currently playing media information
             int retrycount = 0;
             veemo:
@@ -88,15 +113,19 @@ namespace Discord_WMP {
                     goto abort;
                 }
             }
-            title = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("Title");
-            album = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WM/AlbumTitle");
-            artist = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WM/AlbumArtist");
-            lenght = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.durationString;
-            position = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPositionString;
-            lenght_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.duration;
-            position_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPosition;
+            data.title = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("Title");
+            data.album = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WM/AlbumTitle");
+			data.artist = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WM/AlbumArtist");
+			data.lenght = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.durationString;
+			data.position = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPositionString;
+			data.lenght_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.duration;
+			data.position_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPosition;
+            data.is_playing = ((WMPLib.IWMPPlayer4)rm.GetOcx()).playState == WMPLib.WMPPlayState.wmppsPlaying;
+            data.guid = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WMCollectionID");
+            data.path = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.sourceURL;
+
         abort:;
-            return new string[] { title, album, artist, lenght, position, lenght_sec.ToString(), position_sec.ToString() };
+            return data;
         }
         private void Form1_Resize(object sender, EventArgs e) {
             if(WindowState == FormWindowState.Minimized) {
@@ -122,9 +151,10 @@ namespace Discord_WMP {
         protected override void OnFormClosing(FormClosingEventArgs e) {
             notifyIcon1.Dispose();
             base.OnFormClosing(e);
-        }
+            systemMediaControls._run_server = false;
+		}
         bool initialized = false;
-        private void update_Tick(object sender, EventArgs e) {
+		private void update_Tick(object sender, EventArgs e) {
             if(!initialized) {
                 if(client_id != null && client_id.Text != "" && client_id.Text.Length >= 10 /*&& int.TryParse(client_id.Text, out _)*/) {
                     Console.WriteLine("valid client id");
@@ -133,42 +163,36 @@ namespace Discord_WMP {
                 }
             }
             else {
-
-                update.Interval = 5000;
-                string[] data = Data();
-                var title = data[0];
-                var album = data[1];
-                var artist = data[2];
-                var lenght = data[3];
-                var position = data[4];
-                var lenght_num = Convert.ToDouble(data[5]);
-                var position_num = Convert.ToDouble(data[6]);
-                if(lenght_num == -1 || position_num == -1) { 
+                var data = Data();
+                if(data.lenght_sec == -1 || data.position_sec == -1) { 
                     playeddata = "Couldnt find WMP";
                     this.Refresh();
                     goto skip;
                 }
-                var mil = position_num / lenght_num;
-                var time = position + "/" + lenght;
+				if(send_media_info) {
+                    systemMediaControls.update(data, this);
+				}
+				var mil = data.position_sec / data.lenght_sec;
+                var time = data.position + "/" + data.lenght;
                 var playbar = progressbar(mil, 10);
-                if(album == "") {
+                if(data.album == "") {
                     //grab string after " - " in title and put it to album
-                    album = title.Substring(title.IndexOf(" - ") + 3);
+                    data.album = data.title.Substring(data.title.IndexOf(" - ") + 3);
                 }
-                playeddata = title + "\n " + artist + "\n " + album + "\n " + "\n" + time + "\n" + progressbar(mil, 21);
-                string albumart = AlbumManager.getalbumart(album, title);
+                playeddata = data.title + "\n " + data.artist + "\n " + data.album + "\n " + "\n" + time + "\n" + progressbar(mil, 21);
+                string albumart = AlbumManager.getalbumart(data.album, data.title);
                 playeddata += "\n" + albumart;
                 this.Refresh();
                 client.SetPresence(new RichPresence() {
-                    Details = title.Truncate(32),
-                    State = artist.Truncate(32),
+                    Details = data.title.Truncate(32),
+                    State = data.artist.Truncate(32),
                     Assets = new Assets() {
                         LargeImageKey = albumart,
-                        LargeImageText = album.Truncate(32),
+                        LargeImageText = data.album.Truncate(32),
                         SmallImageKey = "wmp_icon"
                     },
                     Timestamps = new Timestamps() {
-                        Start = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(position_num)),
+                        Start = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(data.position_sec)),
                     },
                     Buttons = new DiscordRPC.Button[] {
                         new DiscordRPC.Button() { Label = playbar.Truncate(10), Url = "https://bing.com" }
@@ -179,7 +203,7 @@ namespace Discord_WMP {
             }
         }
 
-        void Initialize() {
+		void Initialize() {
             /*
             Create a Discord client
             NOTE: 	If you are using Unity3D, you must use the full constructor and define
@@ -196,7 +220,7 @@ namespace Discord_WMP {
             };
 
             client.OnPresenceUpdate += (sender, e) => {
-                Console.WriteLine("Received Update! {0}", e.Presence);
+                //Console.WriteLine("Received Update! {0}", e.Presence);
             };
 
             //Connect to the RPC
@@ -213,13 +237,15 @@ namespace Discord_WMP {
             Settings1.Default.RPC_ID = client_id.Text;
         }
         private void settingsload() {
-            Console.WriteLine("loaded settings");
             show_album = Settings1.Default.show_album;
             show_albumart = Settings1.Default.show_albumart;
             show_author = Settings1.Default.show_author;
             show_progressbar = Settings1.Default.show_progressbar;
             client_id.Text = Settings1.Default.RPC_ID;
-        }
+            send_media_info = Settings1.Default.send_media_info;
+            checkBox_sendMediaInfo.Checked = send_media_info;
+			Console.WriteLine("loaded settings");
+		}
         private void Form1_Closing(object sender, FormClosingEventArgs e) {
             Console.WriteLine("saved settings");
             //save settings
@@ -231,15 +257,11 @@ namespace Discord_WMP {
         }
 
         private void checkBox_changed(object sender, EventArgs e) {
-            /*show_album = checkBox_show_album.Checked;
-            show_albumart = checkBox_show_albumart.Checked;
-            show_author = checkBox_show_author.Checked;
-            show_progressbar = checkBox_show_playbar.Checked;
-            Settings1.Default.show_album = show_album;
-            Settings1.Default.show_albumart = show_albumart;
-            Settings1.Default.show_author = show_author;
-            Settings1.Default.show_progressbar = show_progressbar;*/
-        }
+            send_media_info = checkBox_sendMediaInfo.Checked;
+            Settings1.Default.send_media_info = send_media_info;
+            Console.WriteLine("saved settings");
+			Settings1.Default.Save();
+		}
         private string progressbar(double value, int lenght) {
             string bar = "";
             int progress = (int)(value * lenght);
