@@ -51,8 +51,14 @@ namespace Discord_WMP {
 			data = data_;
 
 			systemControls = BackgroundMediaPlayer.Current.SystemMediaTransportControls;
+
 			systemControls.IsEnabled = true;
 			systemControls.IsPlayEnabled = true;
+			systemControls.IsPauseEnabled = true;
+			systemControls.IsStopEnabled = true;
+			systemControls.IsNextEnabled = true;
+			systemControls.IsPreviousEnabled = true;
+			systemControls.ButtonPressed += SystemControls_ButtonPressed;
 
 			GetAlbumArt();
 			//trigger event if play button is pressed on the media overlay
@@ -60,17 +66,46 @@ namespace Discord_WMP {
 				systemControls.ButtonPressed += SystemControls_ButtonPressed;
 				buttonpressed_registered = true;
 			}*/
-			/*if(!server_running) {
+			if(!server_running) {
 				server_running = true;
 				StartServer();
-			}*/
+			}
+			else {
+				checkRequests();
+			}
 			systemControls.DisplayUpdater.Type = MediaPlaybackType.Music;
-			systemControls.PlaybackStatus = MediaPlaybackStatus.Playing;
+			switch(data.play_state) {
+				case WMPLib.WMPPlayState.wmppsPlaying:
+					systemControls.PlaybackStatus = MediaPlaybackStatus.Playing;
+					break;
+					case WMPLib.WMPPlayState.wmppsPaused:
+					systemControls.PlaybackStatus = MediaPlaybackStatus.Paused;
+					break;
+				case WMPLib.WMPPlayState.wmppsStopped:
+					systemControls.PlaybackStatus = MediaPlaybackStatus.Stopped;
+					break;
+				case WMPLib.WMPPlayState.wmppsTransitioning:
+					systemControls.PlaybackStatus = MediaPlaybackStatus.Changing;
+					break;
+				case WMPLib.WMPPlayState.wmppsReady:
+					systemControls.PlaybackStatus = MediaPlaybackStatus.Changing;
+					break;
+				case WMPLib.WMPPlayState.wmppsUndefined:
+					systemControls.PlaybackStatus = MediaPlaybackStatus.Closed;
+					break;
+				case WMPLib.WMPPlayState.wmppsMediaEnded:
+					systemControls.PlaybackStatus = MediaPlaybackStatus.Stopped;
+					break;
+				default:
+					systemControls.PlaybackStatus = MediaPlaybackStatus.Closed;
+					break;
+
+			}
 			systemControls.DisplayUpdater.MusicProperties.Title = data.title;
 			systemControls.DisplayUpdater.MusicProperties.Artist = data.artist;
 			systemControls.DisplayUpdater.MusicProperties.AlbumTitle = data.album;
-			//systemControls.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri($"https://localhost:{Form1.random_port}/"));
-			systemControls.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri("http://tobikcze.eu/files/822671241697689610.png"));
+			systemControls.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri($"http://localhost:{Form1.random_port}"));
+			//systemControls.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri("http://tobikcze.eu/files/822671241697689610.png"));
 			systemControls.DisplayUpdater.Update();
 		}
 		public static void GetAlbumArt() {
@@ -80,17 +115,8 @@ namespace Discord_WMP {
 				if(dir != null) {
 					string filename = Path.Combine(dir, string.Format("AlbumArt_{0}_Large.jpg", data.guid));
 					if(File.Exists(filename)) {
-						Console.WriteLine($"found {string.Format("AlbumArt_{0}_Large.jpg", data.guid)}");
+						Console.WriteLine($"found {Path.Combine(dir, string.Format("AlbumArt_{0}_Large.jpg", data.guid))}");
 						thumbnail_path = filename;
-					}
-					else if(File.Exists(Path.Combine(dir, "AlbumArtSmall.jpg"))){
-						Console.WriteLine("found albumartsmall.jpg");
-						thumbnail_path = Path.Combine(dir, "AlbumArtSmall.jpg");
-						return;
-					}
-					else if(File.Exists(Path.Combine(dir, "Folder.jpg"))) {
-						Console.WriteLine("found folder.jpg");
-						thumbnail_path = Path.Combine(dir, "Folder.jpg");
 						return;
 					}
 					else if(File.Exists(Path.Combine(dir, "Cover.jpg"))) {
@@ -98,23 +124,40 @@ namespace Discord_WMP {
 						thumbnail_path = Path.Combine(dir, "Cover.jpg");
 						return;
 					}
+					else if(File.Exists(Path.Combine(dir, "Folder.jpg"))) {
+						Console.WriteLine("found folder.jpg");
+						thumbnail_path = Path.Combine(dir, "Folder.jpg");
+						return;
+					}
+					else if(File.Exists(Path.Combine(dir, "AlbumArtSmall.jpg"))) {
+						Console.WriteLine("found albumartsmall.jpg");
+						thumbnail_path = Path.Combine(dir, "AlbumArtSmall.jpg");
+						return;
+					}
 				}
 			}
 		}
-		static async void StartServer() {
-			HttpListener listener = new HttpListener();
-			string prefix = $"https://localhost:{Form1.random_port}/";
+
+		static HttpListener listener = new HttpListener();
+		static void StartServer() {
+			string prefix = $"http://localhost:{Form1.random_port}/";
 			listener.Prefixes.Add(prefix); // Add your localhost address
 			listener.Start();
 			Console.WriteLine("Listening on " + prefix);
-
-			while(_run_server) {
-				HttpListenerContext context = await listener.GetContextAsync(); // Asynchronously wait for a client to connect
-				_ = Task.Run(() => ProcessRequest(context)); // Process each request in a separate task
-			}
-			Console.WriteLine("Server stopped succesfully.");
 		}
-
+		static void ListenerCallback(IAsyncResult result) {
+			HttpListener listener = (HttpListener)result.AsyncState;
+			// Call EndGetContext to complete the asynchronous operation.
+			HttpListenerContext context = listener.EndGetContext(result);
+			ProcessRequest(context);
+			// Start listening for next request
+			listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
+		}
+		static void checkRequests() {
+			if(listener.IsListening) {
+				listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
+			}
+		}
 		static void ProcessRequest(HttpListenerContext context) {
 			HttpListenerRequest request = context.Request;
 			HttpListenerResponse response = context.Response;

@@ -29,6 +29,7 @@ namespace Discord_WMP {
         private bool show_albumart;
         private bool show_progressbar;
         private bool send_media_info;
+        private bool show_console;
         public DiscordRpcClient client;
         public static int random_port;
 
@@ -80,6 +81,13 @@ namespace Discord_WMP {
             //run function settingsload when Settings1 finish loading
             settingsload();
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.SmoothingText_Paint);
+
+            if(!show_console) {
+				var handle = GetConsoleWindow();
+
+				// Hide
+				ShowWindow(handle, SW_HIDE);
+			}
         }
         public struct playback_data {
             public string title;
@@ -90,14 +98,14 @@ namespace Discord_WMP {
 			public string position;
 			public double lenght_sec;
 			public double position_sec;
-            public bool is_playing;
+            public WMPLib.WMPPlayState play_state;
 
             public string guid;
             public string path;
 		}
         public playback_data Data() {
             playback_data data = new playback_data();
-            data.artist = ""; data.album = ""; data.title = ""; data.lenght = ""; data.position = ""; data.lenght_sec = -1; data.position_sec = -1; data.is_playing = false; data.guid = ""; data.path = "";
+            data.artist = ""; data.album = ""; data.title = ""; data.lenght = ""; data.position = ""; data.lenght_sec = -1; data.position_sec = -1; data.play_state = WMPLib.WMPPlayState.wmppsStopped; data.guid = ""; data.path = "";
             // Get the currently playing media information
             int retrycount = 0;
             veemo:
@@ -120,7 +128,7 @@ namespace Discord_WMP {
 			data.position = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPositionString;
 			data.lenght_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.duration;
 			data.position_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPosition;
-            data.is_playing = ((WMPLib.IWMPPlayer4)rm.GetOcx()).playState == WMPLib.WMPPlayState.wmppsPlaying;
+            data.play_state = ((WMPLib.IWMPPlayer4)rm.GetOcx()).playState;
             data.guid = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WMCollectionID");
             data.path = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.sourceURL;
 
@@ -141,9 +149,10 @@ namespace Discord_WMP {
             }
         }
         private void RestoreForm() {
-            var handle = GetConsoleWindow();
-            // Show
-            ShowWindow(handle, SW_SHOW);
+            if(show_console) {
+                var handle = GetConsoleWindow();
+                ShowWindow(handle, SW_SHOW);
+            }
             Show();
             WindowState = FormWindowState.Normal;
             notifyIcon1.Visible = false;
@@ -243,6 +252,7 @@ namespace Discord_WMP {
             show_progressbar = Settings1.Default.show_progressbar;
             client_id.Text = Settings1.Default.RPC_ID;
             send_media_info = Settings1.Default.send_media_info;
+            show_console = Settings1.Default.show_console;
             checkBox_sendMediaInfo.Checked = send_media_info;
 			Console.WriteLine("loaded settings");
 		}
@@ -259,6 +269,13 @@ namespace Discord_WMP {
         private void checkBox_changed(object sender, EventArgs e) {
             send_media_info = checkBox_sendMediaInfo.Checked;
             Settings1.Default.send_media_info = send_media_info;
+            show_console = checkBox_showconsole.Checked;
+            Settings1.Default.show_console = show_console;
+
+            var handle = GetConsoleWindow();
+            if(show_console) ShowWindow(handle, SW_SHOW);
+			else ShowWindow(handle, SW_HIDE);
+
             Console.WriteLine("saved settings");
 			Settings1.Default.Save();
 		}

@@ -31,6 +31,7 @@
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.button1 = new System.Windows.Forms.Button();
 			this.checkBox_sendMediaInfo = new System.Windows.Forms.CheckBox();
+			this.checkBox_showconsole = new System.Windows.Forms.CheckBox();
 			this.SuspendLayout();
 			// 
 			// update
@@ -82,18 +83,31 @@
 			this.checkBox_sendMediaInfo.UseVisualStyleBackColor = true;
 			this.checkBox_sendMediaInfo.CheckedChanged += new System.EventHandler(this.checkBox_changed);
 			// 
+			// checkBox_showconsole
+			// 
+			this.checkBox_showconsole.AutoSize = true;
+			this.checkBox_showconsole.Location = new System.Drawing.Point(0, 268);
+			this.checkBox_showconsole.Name = "checkBox_showconsole";
+			this.checkBox_showconsole.Size = new System.Drawing.Size(91, 17);
+			this.checkBox_showconsole.TabIndex = 9;
+			this.checkBox_showconsole.Text = "show console";
+			this.checkBox_showconsole.UseVisualStyleBackColor = true;
+			this.checkBox_showconsole.CheckedChanged += new System.EventHandler(this.checkBox_changed);
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
-			this.ClientSize = new System.Drawing.Size(192, 268);
+			this.ClientSize = new System.Drawing.Size(192, 121);
+			this.Controls.Add(this.checkBox_showconsole);
 			this.Controls.Add(this.checkBox_sendMediaInfo);
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.panel1);
 			this.Controls.Add(this.client_id);
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Name = "Form1";
-			this.Text = "Form1";
+			this.Text = "WMP RPC";
 			this.Load += new System.EventHandler(this.Form1_Load);
 			this.ResumeLayout(false);
 			this.PerformLayout();
@@ -107,6 +121,7 @@
         private System.Windows.Forms.Button button1;
 		public System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.CheckBox checkBox_sendMediaInfo;
+		private System.Windows.Forms.CheckBox checkBox_showconsole;
 	}
 }
 
