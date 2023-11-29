@@ -130,10 +130,15 @@ namespace Discord_WMP {
 
         }
 
-        
-    }
-    //create int enum "pairtype" with names "albumstring", "albumcontains" and "titlecontains"
-    public enum pairtype : int {albumstring, albumcontains, titlecontains};
+		private void AlbumArtAdder_FormClosed(object sender, FormClosedEventArgs e) {
+            Form1.ActiveForm.Show();
+            Form1.ActiveForm.TopMost = true;
+            Form1.ActiveForm.Activate();
+            Form1.albummanageropen = false;
+		}
+	}
+	//create int enum "pairtype" with names "albumstring", "albumcontains" and "titlecontains"
+	public enum pairtype : int {albumstring, albumcontains, titlecontains};
     public struct pair {
         public string filename { get; set; }
         public pairtype type { get; set; }

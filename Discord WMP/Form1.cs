@@ -32,6 +32,7 @@ namespace Discord_WMP {
         private bool show_console;
         public DiscordRpcClient client;
         public static int random_port;
+        public static bool albummanageropen = false;
 
 		[DllImport("kernel32.dll")]
         static extern IntPtr GetConsoleWindow();
@@ -76,8 +77,8 @@ namespace Discord_WMP {
             notifyIcon1.ContextMenuStrip.Items.Add("Restore").Click += (s, e) => RestoreForm();
             notifyIcon1.ContextMenuStrip.Items.Add("Exit").Click += (s, e) => Application.Exit();
             notifyIcon1.MouseClick += (s, e) => { if(e.Button == MouseButtons.Left) RestoreForm(); };
-            //add event handler for minimize
-            this.Resize += new System.EventHandler(this.Form1_Resize);
+
+
             //run function settingsload when Settings1 finish loading
             settingsload();
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.SmoothingText_Paint);
@@ -135,8 +136,8 @@ namespace Discord_WMP {
         abort:;
             return data;
         }
-        private void Form1_Resize(object sender, EventArgs e) {
-            if(WindowState == FormWindowState.Minimized) {
+		private void Form1_Deactivate(object sender, EventArgs e) {
+            if(!albummanageropen) {
                 Hide();
                 var handle = GetConsoleWindow();
 
@@ -147,8 +148,8 @@ namespace Discord_WMP {
                 notifyIcon1.Text = "Windows Media Player Discord RPC";
                 notifyIcon1.ShowBalloonTip(1000);
             }
-        }
-        private void RestoreForm() {
+		}
+		private void RestoreForm() {
             if(show_console) {
                 var handle = GetConsoleWindow();
                 ShowWindow(handle, SW_SHOW);
@@ -164,7 +165,7 @@ namespace Discord_WMP {
 		}
         bool initialized = false;
 		private void update_Tick(object sender, EventArgs e) {
-            if(!initialized) {
+			if(!initialized) {
                 if(client_id != null && client_id.Text != "" && client_id.Text.Length >= 10 /*&& int.TryParse(client_id.Text, out _)*/) {
                     Console.WriteLine("valid client id");
                     Initialize();
@@ -316,6 +317,7 @@ namespace Discord_WMP {
 
         private void button1_Click(object sender, EventArgs e) {
             //open albumartadder form
+            albummanageropen = true;
             AlbumArtAdder form = new AlbumArtAdder();
             form.Show();
         }
