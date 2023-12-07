@@ -149,6 +149,12 @@ namespace Discord_WMP {
 			HttpListener listener = (HttpListener)result.AsyncState;
 			// Call EndGetContext to complete the asynchronous operation.
 			HttpListenerContext context = listener.EndGetContext(result);
+			/*if(context.Request.RemoteEndPoint.Address.ToString() != "localhost") {
+				Console.WriteLine("not localhost");
+				context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+				context.Response.Close();
+				return;
+			}*/
 			ProcessRequest(context);
 			// Start listening for next request
 			listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);

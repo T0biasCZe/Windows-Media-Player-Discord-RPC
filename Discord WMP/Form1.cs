@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -32,6 +33,7 @@ namespace Discord_WMP {
         private bool show_console;
         public DiscordRpcClient client;
         public static int random_port;
+        public static bool isAvailable = true;
         public static bool albummanageropen = false;
 
 		[DllImport("kernel32.dll")]
@@ -40,7 +42,10 @@ namespace Discord_WMP {
         [DllImport("user32.dll")]
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
-        const int SW_HIDE = 0;
+		[DllImport("user32.dll")]
+		private static extern IntPtr GetForegroundWindow();
+
+		const int SW_HIDE = 0;
         const int SW_SHOW = 5;
         string playeddata = "played data:";
         private void SmoothingText_Paint(object sender, PaintEventArgs e) {
@@ -54,8 +59,23 @@ namespace Discord_WMP {
 
         public Form1() {
             Random random = new Random();
+        woomy:;
             random_port = random.Next(49152, 65535);
-            Console.SetWindowSize(50, 15);
+			//check if port is being used and if it is, generate new one
+			IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
+			TcpConnectionInformation[] tcpConnInfoArray = ipGlobalProperties.GetActiveTcpConnections();
+
+			foreach(TcpConnectionInformation tcpi in tcpConnInfoArray) {
+				if(tcpi.LocalEndPoint.Port == random_port) {
+					isAvailable = false;
+					break;
+				}
+			}
+            if(isAvailable == false) {
+                isAvailable = true;
+				goto woomy;
+			}
+			Console.SetWindowSize(50, 15);
             InitializeComponent();
 
             /*//play music in axWindowsMediaPlayer1
@@ -122,24 +142,42 @@ namespace Discord_WMP {
                     goto abort;
                 }
             }
-            data.title = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("Title");
-            data.album = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WM/AlbumTitle");
-			data.artist = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WM/AlbumArtist");
-			data.lenght = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.durationString;
-			data.position = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPositionString;
-			data.lenght_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.duration;
-			data.position_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPosition;
-            data.play_state = ((WMPLib.IWMPPlayer4)rm.GetOcx()).playState;
-            data.guid = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WMCollectionID");
-            data.path = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.sourceURL;
+
+            retrycount = 0;
+            while(retrycount < 3) {
+                try {
+                    data.title = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("Title");
+                    data.album = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WM/AlbumTitle");
+                    data.artist = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WM/AlbumArtist");
+                    data.lenght = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.durationString;
+                    data.position = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPositionString;
+                    data.lenght_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.duration;
+                    data.position_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPosition;
+                    data.play_state = ((WMPLib.IWMPPlayer4)rm.GetOcx()).playState;
+                    data.guid = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WMCollectionID");
+                    data.path = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.sourceURL;
+                    break;
+                }
+                catch {
+                    retrycount++;
+                    Thread.Sleep(1);
+                    ConsoleColor old = Console.ForegroundColor;
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("error while reading data from WMP (this can happen if song changes when the data is being read)");
+                    Console.ForegroundColor = old;
+                }
+            }
 
         abort:;
             return data;
         }
 		private void Form1_Deactivate(object sender, EventArgs e) {
-            if(!albummanageropen) {
+			//check if console is active
+			var handle = GetConsoleWindow();
+            var foregroundHandle = GetForegroundWindow();
+            bool consoleopen = (foregroundHandle == handle);
+			if(!albummanageropen && !consoleopen) {
                 Hide();
-                var handle = GetConsoleWindow();
 
                 // Hide
                 ShowWindow(handle, SW_HIDE);
@@ -246,16 +284,21 @@ namespace Discord_WMP {
             //set rpc_id in settings1 to client_id.Text
             Settings1.Default.RPC_ID = client_id.Text;
         }
+        private static bool loadingsettings = false;
         private void settingsload() {
+            loadingsettings = true;
             show_album = Settings1.Default.show_album;
             show_albumart = Settings1.Default.show_albumart;
             show_author = Settings1.Default.show_author;
             show_progressbar = Settings1.Default.show_progressbar;
             client_id.Text = Settings1.Default.RPC_ID;
-            send_media_info = Settings1.Default.send_media_info;
             show_console = Settings1.Default.show_console;
-            checkBox_sendMediaInfo.Checked = send_media_info;
+            checkBox_showconsole.Checked = show_console;
+			send_media_info = Settings1.Default.send_media_info;
+			checkBox_sendMediaInfo.Checked = send_media_info;
+
 			Console.WriteLine("loaded settings");
+            loadingsettings = false;
 		}
         private void Form1_Closing(object sender, FormClosingEventArgs e) {
             Console.WriteLine("saved settings");
@@ -268,6 +311,8 @@ namespace Discord_WMP {
         }
 
         private void checkBox_changed(object sender, EventArgs e) {
+            //do nothing if settings are loading
+            if(loadingsettings) return;
             send_media_info = checkBox_sendMediaInfo.Checked;
             Settings1.Default.send_media_info = send_media_info;
             show_console = checkBox_showconsole.Checked;
