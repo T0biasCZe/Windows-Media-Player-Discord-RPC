@@ -46,6 +46,7 @@ namespace Discord_WMP {
 		public static bool buttonpressed_registered = false;
 		public static bool server_running = false;
 		public static bool _run_server = true;
+		public static bool registered_events = false;
 		public static void update(Form1.playback_data data_, Form1 form) {
 			rm = form.rm;
 			data = data_;
@@ -58,8 +59,9 @@ namespace Discord_WMP {
 			systemControls.IsStopEnabled = true;
 			systemControls.IsNextEnabled = true;
 			systemControls.IsPreviousEnabled = true;
-			systemControls.ButtonPressed += SystemControls_ButtonPressed;
-
+			if(!registered_events) {
+				systemControls.ButtonPressed += SystemControls_ButtonPressed;
+			}
 			GetAlbumArt();
 			//trigger event if play button is pressed on the media overlay
 			/*if(!buttonpressed_registered) {

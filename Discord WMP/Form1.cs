@@ -31,6 +31,7 @@ namespace Discord_WMP {
         private bool show_progressbar;
         private bool send_media_info;
         private bool show_console;
+        private bool use_rpc;
         public DiscordRpcClient client;
         public static int random_port;
         public static bool isAvailable = true;
@@ -58,6 +59,22 @@ namespace Discord_WMP {
         }
 
         public Form1() {
+            if(Settings1.Default.first_setup) {
+                loadingsettings = true;
+                DialogResult dialog_userpc = MessageBox.Show("Do you want to put WMP play data into Discord Rich presence?\n(Recommended YES if you have Discord installed)", "Initial setup", MessageBoxButtons.YesNo);
+                if(dialog_userpc == DialogResult.Yes) {
+                    use_rpc = true;
+                    Settings1.Default.show_discord = true;
+                }
+                else if(dialog_userpc == DialogResult.No) {
+                    use_rpc = false;
+                    Settings1.Default.show_discord = false;
+                }
+                DialogResult dialog_console = MessageBox.Show("Do you want to bridge WMP play data and Windows 10 Media Info?\nThis will allow you to use keyboard media keys and allow showing playing music for example on Wallpaper Engine\n(Recommended YES if not sure)", "Initial setup", MessageBoxButtons.YesNo);
+                loadingsettings = false;
+                Settings1.Default.first_setup = false;
+                Settings1.Default.Save();
+            }
             Random random = new Random();
         woomy:;
             random_port = random.Next(49152, 65535);
@@ -77,12 +94,6 @@ namespace Discord_WMP {
 			}
 			Console.SetWindowSize(50, 15);
             InitializeComponent();
-
-            /*//play music in axWindowsMediaPlayer1
-            axWindowsMediaPlayer1.URL = "C:\\Users\\user\\Music\\hudba\\Sonic Forces\\Fading World - Imperial Tower - Tomoya Ohtani feat. Madeleine Wood & B-BANDJ.flac";
-            //set axWindowsMediaPlayer1 visualisation to album art
-            axWindowsMediaPlayer1.uiMode = "full";*/
-
 
 			rm.Dock = DockStyle.Fill;
 
@@ -136,9 +147,16 @@ namespace Discord_WMP {
             catch {
                 Thread.Sleep(20);
                 retrycount++;
-                if(retrycount < 10) goto veemo;
+                ConsoleColor old = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("error trying to read WMP data, retrying");
+				Console.ForegroundColor = old;
+				if(retrycount < 10) goto veemo;
                 else {
-                    playeddata = "Couldnt find WMP";
+					Console.ForegroundColor = ConsoleColor.Red;
+					playeddata = "Couldnt find WMP";
+                    Console.WriteLine("aborting");
+                    Console.ForegroundColor = old;
                     goto abort;
                 }
             }
@@ -203,24 +221,32 @@ namespace Discord_WMP {
 		}
         bool initialized = false;
 		private void update_Tick(object sender, EventArgs e) {
-			if(!initialized) {
-                if(client_id != null && client_id.Text != "" && client_id.Text.Length >= 10 /*&& int.TryParse(client_id.Text, out _)*/) {
-                    Console.WriteLine("valid client id");
-                    Initialize();
-                    initialized = true;
-                }
+            var data = Data();
+            if(data.lenght_sec == -1 || data.position_sec == -1) { 
+                playeddata = "Couldnt find WMP";
+                this.Refresh();
+                return;
             }
-            else {
-                var data = Data();
-                if(data.lenght_sec == -1 || data.position_sec == -1) { 
-                    playeddata = "Couldnt find WMP";
-                    this.Refresh();
-                    goto skip;
-                }
-				if(send_media_info) {
-                    systemMediaControls.update(data, this);
+			if(send_media_info) {
+                systemMediaControls.update(data, this);
+			}
+            if(use_rpc) {
+                if(!initialized) {
+					try {
+						if(client_id != null && client_id.Text != "" && client_id.Text.Length >= 10 /*&& int.TryParse(client_id.Text, out _)*/) {
+							Console.WriteLine("valid client id");
+							Initialize();
+							initialized = true;
+						}
+					}
+					catch {
+						ConsoleColor old = Console.ForegroundColor;
+						Console.ForegroundColor = ConsoleColor.Red;
+						Console.WriteLine("error initializing RPC. Discord propably not running.\n If you do not want to use Discord RPC disable it in checkboxes below");
+						Console.ForegroundColor = old;
+					}
 				}
-				var mil = data.position_sec / data.lenght_sec;
+                var mil = data.position_sec / data.lenght_sec;
                 var time = data.position + "/" + data.lenght;
                 var playbar = progressbar(mil, 10);
                 if(data.album == "") {
@@ -247,8 +273,11 @@ namespace Discord_WMP {
                     }
                 });
                 Console.WriteLine("set data");
-            skip:;
             }
+            else if(!use_rpc && initialized) {
+				Deinitialize();
+				initialized = false;
+			}
         }
 
 		void Initialize() {
@@ -274,6 +303,16 @@ namespace Discord_WMP {
             //Connect to the RPC
             client.Initialize();
         }
+        void Deinitialize() {
+            client.Deinitialize();
+            client.OnPresenceUpdate -= (sender, e) => {
+				//Console.WriteLine("Received Update! {0}", e.Presence);
+			};
+            client.OnReady -= (sender, e) => {
+				Console.WriteLine("Received Ready from user {0}", e.User.Username);
+			};
+			client.Dispose();
+		}
 
         private void Form1_Load(object sender, EventArgs e) {
             Console.WriteLine("veemo");
@@ -296,6 +335,8 @@ namespace Discord_WMP {
             checkBox_showconsole.Checked = show_console;
 			send_media_info = Settings1.Default.send_media_info;
 			checkBox_sendMediaInfo.Checked = send_media_info;
+            use_rpc = Settings1.Default.show_discord;
+            checkBox_userpc.Checked = use_rpc;
 
 			Console.WriteLine("loaded settings");
             loadingsettings = false;
@@ -317,6 +358,8 @@ namespace Discord_WMP {
             Settings1.Default.send_media_info = send_media_info;
             show_console = checkBox_showconsole.Checked;
             Settings1.Default.show_console = show_console;
+            use_rpc = checkBox_userpc.Checked;
+            Settings1.Default.show_discord = use_rpc;
 
             var handle = GetConsoleWindow();
             if(show_console) ShowWindow(handle, SW_SHOW);

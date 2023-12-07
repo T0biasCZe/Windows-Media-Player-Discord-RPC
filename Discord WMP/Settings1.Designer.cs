@@ -118,5 +118,29 @@ namespace Discord_WMP {
                 this["show_console"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool show_discord {
+            get {
+                return ((bool)(this["show_discord"]));
+            }
+            set {
+                this["show_discord"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool first_setup {
+            get {
+                return ((bool)(this["first_setup"]));
+            }
+            set {
+                this["first_setup"] = value;
+            }
+        }
     }
 }

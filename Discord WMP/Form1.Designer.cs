@@ -32,6 +32,7 @@
 			this.button1 = new System.Windows.Forms.Button();
 			this.checkBox_sendMediaInfo = new System.Windows.Forms.CheckBox();
 			this.checkBox_showconsole = new System.Windows.Forms.CheckBox();
+			this.checkBox_userpc = new System.Windows.Forms.CheckBox();
 			this.SuspendLayout();
 			// 
 			// update
@@ -58,7 +59,7 @@
 			// 
 			this.panel1.Location = new System.Drawing.Point(0, 128);
 			this.panel1.Name = "panel1";
-			this.panel1.Size = new System.Drawing.Size(200, 96);
+			this.panel1.Size = new System.Drawing.Size(196, 96);
 			this.panel1.TabIndex = 6;
 			// 
 			// button1
@@ -94,12 +95,24 @@
 			this.checkBox_showconsole.UseVisualStyleBackColor = true;
 			this.checkBox_showconsole.CheckedChanged += new System.EventHandler(this.checkBox_changed);
 			// 
+			// checkBox_userpc
+			// 
+			this.checkBox_userpc.AutoSize = true;
+			this.checkBox_userpc.Location = new System.Drawing.Point(0, 294);
+			this.checkBox_userpc.Name = "checkBox_userpc";
+			this.checkBox_userpc.Size = new System.Drawing.Size(109, 17);
+			this.checkBox_userpc.TabIndex = 10;
+			this.checkBox_userpc.Text = "Use Discord RPC";
+			this.checkBox_userpc.UseVisualStyleBackColor = true;
+			this.checkBox_userpc.CheckedChanged += new System.EventHandler(this.checkBox_changed);
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
 			this.ClientSize = new System.Drawing.Size(192, 121);
+			this.Controls.Add(this.checkBox_userpc);
 			this.Controls.Add(this.checkBox_showconsole);
 			this.Controls.Add(this.checkBox_sendMediaInfo);
 			this.Controls.Add(this.button1);
@@ -125,6 +138,7 @@
 		public System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.CheckBox checkBox_sendMediaInfo;
 		private System.Windows.Forms.CheckBox checkBox_showconsole;
+		private System.Windows.Forms.CheckBox checkBox_userpc;
 	}
 }
 
