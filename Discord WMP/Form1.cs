@@ -17,10 +17,15 @@ using DiscordRPC;
 using DiscordRPC.Logging;
 using Windows.Media;
 using Windows.Media.Playback;
+using WMPLib;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Discord_WMP {
     public partial class Form1 : Form {
+        public static string version = "2.0";
+        public static string commit = "2.0.0";
+        public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
+
         albummanager AlbumManager = new albummanager();
         public RemotedWindowsMediaPlayer rm = new RemotedWindowsMediaPlayer();
         //RemotedWindowsMediaPlayer rm;
@@ -75,7 +80,12 @@ namespace Discord_WMP {
                 Settings1.Default.first_setup = false;
                 Settings1.Default.Save();
             }
-            Random random = new Random();
+
+			var handle = GetConsoleWindow();
+			// Show console during boot
+			ShowWindow(handle, SW_SHOW);
+
+			Random random = new Random();
         woomy:;
             random_port = random.Next(49152, 65535);
 			//check if port is being used and if it is, generate new one
@@ -109,17 +119,17 @@ namespace Discord_WMP {
             notifyIcon1.ContextMenuStrip.Items.Add("Exit").Click += (s, e) => Application.Exit();
             notifyIcon1.MouseClick += (s, e) => { if(e.Button == MouseButtons.Left) RestoreForm(); };
 
+            linkLabel1.Text = version + " " + commit;
+            linkLabel1.Links.Add(0, version.Length + commit.Length + 1, url);
 
             //run function settingsload when Settings1 finish loading
             settingsload();
+			handle = GetConsoleWindow();
+			// Show console during boot
+			ShowWindow(handle, SW_SHOW);
+
+			Console.WriteLine("Loading app, please wait:)");
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.SmoothingText_Paint);
-
-            if(!show_console) {
-				var handle = GetConsoleWindow();
-
-				// Hide
-				ShowWindow(handle, SW_HIDE);
-			}
         }
         public struct playback_data {
             public string title;
@@ -134,15 +144,18 @@ namespace Discord_WMP {
 
             public string guid;
             public string path;
+            public string media_type;
 		}
         public playback_data Data() {
             playback_data data = new playback_data();
             data.artist = ""; data.album = ""; data.title = ""; data.lenght = ""; data.position = ""; data.lenght_sec = -1; data.position_sec = -1; data.play_state = WMPLib.WMPPlayState.wmppsStopped; data.guid = ""; data.path = "";
             // Get the currently playing media information
             int retrycount = 0;
+            WMPLib.IWMPPlayer4 player = (WMPLib.IWMPPlayer4)rm.GetOcx();
             veemo:
             try {
-                var a = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.duration;
+                player = ((WMPLib.IWMPPlayer4)rm.GetOcx());
+				var a = player.currentMedia.duration;
             }
             catch {
                 Thread.Sleep(20);
@@ -151,7 +164,7 @@ namespace Discord_WMP {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("error trying to read WMP data, retrying");
 				Console.ForegroundColor = old;
-				if(retrycount < 10) goto veemo;
+				if(retrycount < numericUpDown_retryattempts.Value) goto veemo;
                 else {
 					Console.ForegroundColor = ConsoleColor.Red;
 					playeddata = "Couldnt find WMP";
@@ -162,18 +175,20 @@ namespace Discord_WMP {
             }
 
             retrycount = 0;
-            while(retrycount < 3) {
+            while(retrycount < numericUpDown_retryattempts.Value) {
                 try {
-                    data.title = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("Title");
-                    data.album = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WM/AlbumTitle");
-                    data.artist = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WM/AlbumArtist");
-                    data.lenght = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.durationString;
-                    data.position = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPositionString;
-                    data.lenght_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.duration;
-                    data.position_sec = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.currentPosition;
-                    data.play_state = ((WMPLib.IWMPPlayer4)rm.GetOcx()).playState;
-                    data.guid = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.getItemInfo("WMCollectionID");
-                    data.path = ((WMPLib.IWMPPlayer4)rm.GetOcx()).currentMedia.sourceURL;
+                    data.title = player.currentMedia.getItemInfo("Title");
+                    data.album = player.currentMedia.getItemInfo("WM/AlbumTitle");
+                    data.artist = player.currentMedia.getItemInfo("WM/AlbumArtist");
+                    data.lenght = player.currentMedia.durationString;
+                    data.position = player.controls.currentPositionString;
+                    data.lenght_sec = player.currentMedia.duration;
+                    data.position_sec = player.controls.currentPosition;
+                    data.play_state = player.playState;
+                    data.guid = player.currentMedia.getItemInfo("WMCollectionID");
+                    data.path = player.currentMedia.sourceURL;
+                    data.media_type = player.currentMedia.getItemInfo("MediaType");
+
                     break;
                 }
                 catch {
@@ -189,12 +204,13 @@ namespace Discord_WMP {
         abort:;
             return data;
         }
+
 		private void Form1_Deactivate(object sender, EventArgs e) {
 			//check if console is active
 			var handle = GetConsoleWindow();
             var foregroundHandle = GetForegroundWindow();
             bool consoleopen = (foregroundHandle == handle);
-			if(!albummanageropen && !consoleopen) {
+			if(!albummanageropen && !consoleopen && !checkBox_dontautohide.Checked) {
                 Hide();
 
                 // Hide
@@ -219,18 +235,43 @@ namespace Discord_WMP {
             base.OnFormClosing(e);
             systemMediaControls._run_server = false;
 		}
-        bool initialized = false;
+		private void debug(playback_data data) {
+            label3.Text = "initialized " + initialized.ToString();
+            label4.Text = "send_data_lasttime " + send_data_lasttime.ToString();
+            label5.Text = "play_state " + data.play_state.ToString();
+            label6.Text = "mediatype " + data.media_type;
+
+		}
+		bool initialized = false;
+        bool send_data_lasttime = false;
 		private void update_Tick(object sender, EventArgs e) {
             var data = Data();
+            debug(data);
             if(data.lenght_sec == -1 || data.position_sec == -1) { 
                 playeddata = "Couldnt find WMP";
                 this.Refresh();
-                return;
+                if(use_rpc && initialized && send_data_lasttime) {
+                    client.SetPresence(new RichPresence());
+                    send_data_lasttime = false;
+                    Deinitialize();
+                    initialized = false;
+				}
             }
+            if(data.play_state == WMPLib.WMPPlayState.wmppsStopped || data.play_state == WMPLib.WMPPlayState.wmppsMediaEnded || data.play_state == WMPLib.WMPPlayState.wmppsUndefined) {
+				playeddata = "Stopped";
+				this.Refresh();
+				if(use_rpc && initialized && send_data_lasttime) {
+					client.SetPresence(new RichPresence());
+					send_data_lasttime = false;
+					Deinitialize();
+					initialized = false;
+                    Console.WriteLine("stopped and deinitialized");
+				}
+			}
 			if(send_media_info) {
                 systemMediaControls.update(data, this);
 			}
-            if(use_rpc) {
+            if(use_rpc && playeddata != "Stopped") {
                 if(!initialized) {
 					try {
 						if(client_id != null && client_id.Text != "" && client_id.Text.Length >= 10 /*&& int.TryParse(client_id.Text, out _)*/) {
@@ -272,6 +313,7 @@ namespace Discord_WMP {
                         new DiscordRPC.Button() { Label = playbar.Truncate(10), Url = "https://bing.com" }
                     }
                 });
+                send_data_lasttime = true;
                 Console.WriteLine("set data");
             }
             else if(!use_rpc && initialized) {
@@ -317,7 +359,12 @@ namespace Discord_WMP {
         private void Form1_Load(object sender, EventArgs e) {
             Console.WriteLine("veemo");
             AlbumManager.LoadListFromCsv();
-        }
+            if(!show_console) {
+                var handle = GetConsoleWindow();
+                // Show console during boot
+                ShowWindow(handle, SW_HIDE);
+            }
+		}
 
         private void client_id_TextChanged(object sender, EventArgs e) {
             //set rpc_id in settings1 to client_id.Text
@@ -409,11 +456,30 @@ namespace Discord_WMP {
             AlbumArtAdder form = new AlbumArtAdder();
             form.Show();
         }
-    }
-    //create new ¨class for extension method
-    public static class ExtensionMethods {
+
+		private void button_resizeBack_Click(object sender, EventArgs e) {
+            this.Height = 160;
+            this.Width = 208;
+		}
+
+		private void button_settings_Click(object sender, EventArgs e) {
+            if(this.Height > 160) {
+				this.Height = 160;
+                this.Width = 208;
+			}
+			else {
+				this.Width = 400;
+                this.Height = 428;
+			}
+		}
+	}
+	//create new class for extension method
+	public static class ExtensionMethods {
         public static string Truncate(this string value, int maxChars) {
             return value.Length <= maxChars ? value : value.Substring(0, maxChars);
         }
-    }
+		public static bool In<T>(this T obj, params T[] args) {
+			return args.Contains(obj);
+		}
+	}
 }

@@ -43,7 +43,6 @@ namespace Discord_WMP {
 		public static Form1.playback_data data;
 		public static string thumbnail_path;
 
-		public static bool buttonpressed_registered = false;
 		public static bool server_running = false;
 		public static bool _run_server = true;
 		public static bool registered_events = false;
@@ -53,6 +52,19 @@ namespace Discord_WMP {
 
 			systemControls = BackgroundMediaPlayer.Current.SystemMediaTransportControls;
 
+			if(data.play_state == WMPLib.WMPPlayState.wmppsUndefined || data.play_state == WMPLib.WMPPlayState.wmppsStopped) {
+				systemControls.IsEnabled = false;
+				systemControls.IsPlayEnabled = false;
+				systemControls.IsPauseEnabled = false;
+				systemControls.IsStopEnabled = false;
+				systemControls.IsNextEnabled = false;
+				systemControls.IsPreviousEnabled = false;
+				systemControls.ButtonPressed -= SystemControls_ButtonPressed;
+				registered_events = false;
+
+				systemControls.DisplayUpdater.Update();
+				return;
+			}
 			systemControls.IsEnabled = true;
 			systemControls.IsPlayEnabled = true;
 			systemControls.IsPauseEnabled = true;
@@ -61,13 +73,10 @@ namespace Discord_WMP {
 			systemControls.IsPreviousEnabled = true;
 			if(!registered_events) {
 				systemControls.ButtonPressed += SystemControls_ButtonPressed;
+				registered_events = true;
 			}
 			GetAlbumArt();
-			//trigger event if play button is pressed on the media overlay
-			/*if(!buttonpressed_registered) {
-				systemControls.ButtonPressed += SystemControls_ButtonPressed;
-				buttonpressed_registered = true;
-			}*/
+
 			if(!server_running) {
 				server_running = true;
 				StartServer();
@@ -76,6 +85,17 @@ namespace Discord_WMP {
 				checkRequests();
 			}
 			systemControls.DisplayUpdater.Type = MediaPlaybackType.Music;
+			switch(data.media_type) {
+				case "audio":
+					systemControls.DisplayUpdater.Type = MediaPlaybackType.Music;
+					break;
+				case "video":
+					systemControls.DisplayUpdater.Type = MediaPlaybackType.Video;
+					break;
+				case "image":
+					systemControls.DisplayUpdater.Type = MediaPlaybackType.Image;
+					break;
+			}
 			switch(data.play_state) {
 				case WMPLib.WMPPlayState.wmppsPlaying:
 					systemControls.PlaybackStatus = MediaPlaybackStatus.Playing;
@@ -112,31 +132,37 @@ namespace Discord_WMP {
 		}
 		public static void GetAlbumArt() {
 			thumbnail_path = "noalbumart.png"; // fallback image next to exe
-			if(data.path != null) {
-				string dir = Path.GetDirectoryName(data.path);
-				if(dir != null) {
-					string filename = Path.Combine(dir, string.Format("AlbumArt_{0}_Large.jpg", data.guid));
-					if(File.Exists(filename)) {
-						Console.WriteLine($"found {Path.Combine(dir, string.Format("AlbumArt_{0}_Large.jpg", data.guid))}");
-						thumbnail_path = filename;
-						return;
-					}
-					else if(File.Exists(Path.Combine(dir, "Cover.jpg"))) {
-						Console.WriteLine("found cover.jpg");
-						thumbnail_path = Path.Combine(dir, "Cover.jpg");
-						return;
-					}
-					else if(File.Exists(Path.Combine(dir, "Folder.jpg"))) {
-						Console.WriteLine("found folder.jpg");
-						thumbnail_path = Path.Combine(dir, "Folder.jpg");
-						return;
-					}
-					else if(File.Exists(Path.Combine(dir, "AlbumArtSmall.jpg"))) {
-						Console.WriteLine("found albumartsmall.jpg");
-						thumbnail_path = Path.Combine(dir, "AlbumArtSmall.jpg");
-						return;
+			try {
+				if(data.path != null) {
+					string dir = Path.GetDirectoryName(data.path);
+					if(dir != null) {
+						string filename = Path.Combine(dir, string.Format("AlbumArt_{0}_Large.jpg", data.guid));
+						if(File.Exists(filename)) {
+							Console.WriteLine($"found {Path.Combine(dir, string.Format("AlbumArt_{0}_Large.jpg", data.guid))}");
+							thumbnail_path = filename;
+							return;
+						}
+						else if(File.Exists(Path.Combine(dir, "Cover.jpg"))) {
+							Console.WriteLine("found cover.jpg");
+							thumbnail_path = Path.Combine(dir, "Cover.jpg");
+							return;
+						}
+						else if(File.Exists(Path.Combine(dir, "Folder.jpg"))) {
+							Console.WriteLine("found folder.jpg");
+							thumbnail_path = Path.Combine(dir, "Folder.jpg");
+							return;
+						}
+						else if(File.Exists(Path.Combine(dir, "AlbumArtSmall.jpg"))) {
+							Console.WriteLine("found albumartsmall.jpg");
+							thumbnail_path = Path.Combine(dir, "AlbumArtSmall.jpg");
+							return;
+						}
 					}
 				}
+			}
+			catch(Exception e) {
+				Console.WriteLine(e);
+				thumbnail_path = "noalbumart.png";
 			}
 		}
 
