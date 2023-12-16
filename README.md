@@ -1,9 +1,17 @@
-# Discord rich presence for windows media player
+# Windows Media Player Discord RPC & Media Info bridge
 # Features:
+* bridge Windows Media Player playing media info and Windows 10/11 system media info. This allows you to use keyboard media keys and apps like wallpaper engine can show the playing media on wallpaper:           
+
 * take info from running WMP instance and put it into discord
-* minimize onto tray (press minimize button on top right)
+* minimize onto tray to not take space on taskbar ~~(press minimize button on top right)~~ *minimizes automatically when you open some other software in 2.0*
 * smart album art manager
+
+https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/assets/44525446/994c0095-9755-4f90-8b92-f5e699c8d0a1
+
+
 ![obrazek](https://user-images.githubusercontent.com/44525446/219905110-305fffc3-90f9-48e9-84b2-52595ea3bc7c.png)
+
+
 
 # Album art manager
 
