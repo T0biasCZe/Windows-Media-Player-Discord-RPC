@@ -23,7 +23,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 namespace Discord_WMP {
     public partial class Form1 : Form {
         public static string version = "2.0";
-        public static string commit = "2.0.0";
+        public static string commit = "0c0b602"; //this value is always gonna be 1 commit behind in source code, because it is updated after commit
         public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
 
         albummanager AlbumManager = new albummanager();
@@ -257,7 +257,8 @@ namespace Discord_WMP {
                     initialized = false;
 				}
             }
-            if(data.play_state == WMPLib.WMPPlayState.wmppsStopped || data.play_state == WMPLib.WMPPlayState.wmppsMediaEnded || data.play_state == WMPLib.WMPPlayState.wmppsUndefined) {
+            bool stopped = data.play_state.In(WMPLib.WMPPlayState.wmppsStopped, WMPLib.WMPPlayState.wmppsMediaEnded, WMPLib.WMPPlayState.wmppsUndefined);
+            if(stopped) {
 				playeddata = "Stopped";
 				this.Refresh();
 				if(use_rpc && initialized && send_data_lasttime) {
@@ -271,7 +272,7 @@ namespace Discord_WMP {
 			if(send_media_info) {
                 systemMediaControls.update(data, this);
 			}
-            if(use_rpc && playeddata != "Stopped") {
+            if(use_rpc && !stopped) {
                 if(!initialized) {
 					try {
 						if(client_id != null && client_id.Text != "" && client_id.Text.Length >= 10 /*&& int.TryParse(client_id.Text, out _)*/) {
