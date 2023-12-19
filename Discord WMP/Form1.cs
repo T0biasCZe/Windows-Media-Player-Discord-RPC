@@ -22,9 +22,14 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Discord_WMP {
     public partial class Form1 : Form {
-        public static string version = "2.0";
-        public static string commit = "0c0b602"; //this value is always gonna be 1 commit behind in source code, because it is updated after commit
-        public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
+		//public static string version = "2.0";
+		//public static string commit = "0c0b602"; //this value is always gonna be 1 commit behind in source code, because it is updated after commit
+
+        const string version = "v2.1";
+        const string date = "19.12.23";
+		string versionn = $"{Discord_WMP.Properties.Resources.CurrentCommit.Trim()} {version} {date}";
+
+		public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
 
         albummanager AlbumManager = new albummanager();
         public RemotedWindowsMediaPlayer rm = new RemotedWindowsMediaPlayer();
@@ -119,8 +124,8 @@ namespace Discord_WMP {
             notifyIcon1.ContextMenuStrip.Items.Add("Exit").Click += (s, e) => Application.Exit();
             notifyIcon1.MouseClick += (s, e) => { if(e.Button == MouseButtons.Left) RestoreForm(); };
 
-            linkLabel1.Text = version + " " + commit;
-            linkLabel1.Links.Add(0, version.Length + commit.Length + 1, url);
+            linkLabel1.Text = versionn;
+            linkLabel1.Links.Add(0, versionn.Length, url);
 
             //run function settingsload when Settings1 finish loading
             settingsload();
