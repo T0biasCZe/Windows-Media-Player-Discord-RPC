@@ -278,12 +278,47 @@ namespace Discord_WMP {
                 systemMediaControls.update(data, this);
 			}
             if(use_rpc && !stopped) {
+				var mil = data.position_sec / data.lenght_sec;
+				var time = data.position + "/" + data.lenght;
+				var playbar = progressbar(mil, 10);
+				if(data.album == "") {
+					//grab string after " - " in title and put it to album
+					data.album = data.title.Substring(data.title.IndexOf(" - ") + 3);
+				}
+				playeddata = data.title + "\n " + data.artist + "\n " + data.album + "\n " + "\n" + time + "\n" + progressbar(mil, 21);
+				string albumart = AlbumManager.getalbumart(data.album, data.title);
+				playeddata += "\n" + albumart;
+				this.Refresh();
+
+				bool discord_not_running = false;
+                try {
+                    int temp = client.TargetPipe;
+				}
+				catch {
+					discord_not_running = true;
+				}
+                if(discord_not_running) {
+					if(initialized) {
+						Deinitialize();
+						initialized = false;
+						Console.WriteLine("discord not running, deinitialized");
+					}
+					goto breakout;
+                }
                 if(!initialized) {
 					try {
 						if(client_id != null && client_id.Text != "" && client_id.Text.Length >= 10 /*&& int.TryParse(client_id.Text, out _)*/) {
 							Console.WriteLine("valid client id");
-							Initialize();
-							initialized = true;
+							bool result = Initialize();
+                            if(result) {
+								Console.WriteLine("initialized");
+								initialized = true;
+							}
+                            else {
+                                Console.WriteLine("error initializing RPC.");
+                                initialized = false;
+                                goto breakout;
+							}
 						}
 					}
 					catch {
@@ -291,19 +326,9 @@ namespace Discord_WMP {
 						Console.ForegroundColor = ConsoleColor.Red;
 						Console.WriteLine("error initializing RPC. Discord propably not running.\n If you do not want to use Discord RPC disable it in checkboxes below");
 						Console.ForegroundColor = old;
+                        goto breakout;
 					}
 				}
-                var mil = data.position_sec / data.lenght_sec;
-                var time = data.position + "/" + data.lenght;
-                var playbar = progressbar(mil, 10);
-                if(data.album == "") {
-                    //grab string after " - " in title and put it to album
-                    data.album = data.title.Substring(data.title.IndexOf(" - ") + 3);
-                }
-                playeddata = data.title + "\n " + data.artist + "\n " + data.album + "\n " + "\n" + time + "\n" + progressbar(mil, 21);
-                string albumart = AlbumManager.getalbumart(data.album, data.title);
-                playeddata += "\n" + albumart;
-                this.Refresh();
                 client.SetPresence(new RichPresence() {
                     Details = data.title.Truncate(32),
                     State = data.artist.Truncate(32),
@@ -326,14 +351,20 @@ namespace Discord_WMP {
 				Deinitialize();
 				initialized = false;
 			}
-        }
+		breakout:;
+		}
 
-		void Initialize() {
+		bool Initialize() {
             /*
             Create a Discord client
             NOTE: 	If you are using Unity3D, you must use the full constructor and define
                      the pipe connection.
             */
+
+            if(client_id.Text.Length <= 8) {
+                Console.WriteLine("invalid client id");
+				return false;
+			}
             client = new DiscordRpcClient(client_id.Text);
 
             //Set the logger
@@ -350,6 +381,7 @@ namespace Discord_WMP {
 
             //Connect to the RPC
             client.Initialize();
+            return true;
         }
         void Deinitialize() {
             client.Deinitialize();
