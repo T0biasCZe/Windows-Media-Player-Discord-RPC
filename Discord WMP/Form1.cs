@@ -25,8 +25,8 @@ namespace Discord_WMP {
 		//public static string version = "2.0";
 		//public static string commit = "0c0b602"; //this value is always gonna be 1 commit behind in source code, because it is updated after commit
 
-        const string version = "v2.1";
-        const string date = "19.12.23";
+        const string version = "v2.2";
+        const string date = "18.1.24";
 		string versionn = $"{Discord_WMP.Properties.Resources.CurrentCommit.Trim()} {version} {date}";
 
 		public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
