@@ -256,6 +256,7 @@ namespace Discord_WMP {
 		}
 		bool initialized = false;
         bool send_data_lasttime = false;
+        Stopwatch pause_stopwatch = new Stopwatch();
 		private void update_Tick(object sender, EventArgs e) {
             var data = Data();
             debug(data);
@@ -270,6 +271,18 @@ namespace Discord_WMP {
 				}
             }
             bool stopped = data.play_state.In(WMPLib.WMPPlayState.wmppsStopped, WMPLib.WMPPlayState.wmppsMediaEnded, WMPLib.WMPPlayState.wmppsUndefined);
+            if(data.play_state == WMPPlayState.wmppsPaused) {
+                //if stopwatch is not running, start it. then if music is paused for more than 5 seconds, stop sending data
+                if(!pause_stopwatch.IsRunning) {
+					pause_stopwatch.Start();
+				}
+                if(pause_stopwatch.ElapsedMilliseconds > 30000) {
+					stopped = true;
+				}
+			}
+			else {
+				pause_stopwatch.Reset();
+            }
             if(stopped) {
 				playeddata = "Stopped";
 				this.Refresh();
@@ -298,13 +311,15 @@ namespace Discord_WMP {
 				this.Refresh();
 
 				bool discord_not_running = false;
-                try {
-                    int temp = client.TargetPipe;
+				/*try {
 				}
 				catch {
+                    Console.WriteLine("discord not running");
 					discord_not_running = true;
-				}
-                if(discord_not_running) {
+				}*/
+				Console.WriteLine("e");
+				label8.Text = "discord_not_running " + discord_not_running.ToString();
+				if(discord_not_running) {
 					if(initialized) {
 						Deinitialize();
 						initialized = false;
@@ -314,7 +329,7 @@ namespace Discord_WMP {
                 }
                 if(!initialized) {
 					try {
-						if(client_id != null && client_id.Text != "" && client_id.Text.Length >= 10 /*&& int.TryParse(client_id.Text, out _)*/) {
+						if(client_id != null && client_id.Text.Length >= 3) {
 							Console.WriteLine("valid client id");
 							bool result = Initialize();
                             if(result) {

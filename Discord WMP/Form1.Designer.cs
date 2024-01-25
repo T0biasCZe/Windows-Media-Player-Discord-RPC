@@ -45,6 +45,7 @@
 			this.linkLabel1 = new System.Windows.Forms.LinkLabel();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.label7 = new System.Windows.Forms.Label();
+			this.label8 = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.numericUpDown_retryattempts)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -232,12 +233,22 @@
 			this.label7.TabIndex = 24;
 			this.label7.Text = "label7";
 			// 
+			// label8
+			// 
+			this.label8.AutoSize = true;
+			this.label8.Location = new System.Drawing.Point(227, 130);
+			this.label8.Name = "label8";
+			this.label8.Size = new System.Drawing.Size(35, 13);
+			this.label8.TabIndex = 25;
+			this.label8.Text = "label8";
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
 			this.ClientSize = new System.Drawing.Size(192, 121);
+			this.Controls.Add(this.label8);
 			this.Controls.Add(this.label7);
 			this.Controls.Add(this.linkLabel1);
 			this.Controls.Add(this.label2);
@@ -289,6 +300,7 @@
 		private System.Windows.Forms.LinkLabel linkLabel1;
 		private System.Windows.Forms.ToolTip toolTip1;
 		private System.Windows.Forms.Label label7;
+		private System.Windows.Forms.Label label8;
 	}
 }
 
