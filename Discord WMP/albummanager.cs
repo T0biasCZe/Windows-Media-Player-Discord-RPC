@@ -42,31 +42,45 @@ namespace Discord_WMP {
         }
 
         public string getalbumart(string album, string title) {
-            for(int i = 0; i < 10; i++) {
-                foreach(pair per in pairList) {
-                    if(per.priority == i) {
-                        if(per.type == pairtype.albumstring) {
-                            if(per.album.Trim().ToLower() == album.Trim().ToLower()) {
-                                return per.filename;
-                            }
-                        }
-                        else if(per.type == pairtype.albumcontains) {
-                            if(album.Contains(per.contains, StringComparison.OrdinalIgnoreCase)) {
-                                if(per.doesntcontain.Length > 1) if(!album.Contains(per.doesntcontain, StringComparison.OrdinalIgnoreCase)) continue;
-                                return per.filename;
-                            }
-                        }
-                        else if(per.type == pairtype.titlecontains) {
-                            if(title.Contains(per.contains, StringComparison.OrdinalIgnoreCase)) {
-                                if(per.doesntcontain.Length > 1) if(!title.Contains(per.doesntcontain, StringComparison.OrdinalIgnoreCase)) continue;
-                                return per.filename;
-                            }
-                        }
-                    }
-                }
-            }
-            return "wmp_empty";
+            return getalbumart(album, title, "", "");
         }
+        public string getalbumart(string album, string title, string artist, string audiofilename) {
+			for(int i = 0; i < 10; i++) {
+				foreach(pair per in pairList) {
+					if(per.priority == i) {
+						if(per.type == pairtype.albumstring) {
+							if(per.album.Trim().ToLower() == album.Trim().ToLower()) {
+								return per.filename;
+							}
+						}
+						else if(per.type == pairtype.albumcontains) {
+							if(album.Contains(per.contains, StringComparison.OrdinalIgnoreCase)) {
+								if(per.doesntcontain.Length > 1) if(!album.Contains(per.doesntcontain, StringComparison.OrdinalIgnoreCase)) continue;
+								return per.filename;
+							}
+						}
+						else if(per.type == pairtype.titlecontains) {
+							if(title.Contains(per.contains, StringComparison.OrdinalIgnoreCase)) {
+								if(per.doesntcontain.Length > 1) if(!title.Contains(per.doesntcontain, StringComparison.OrdinalIgnoreCase)) continue;
+								return per.filename;
+							}
+						}
+						else if(per.type == pairtype.artistname) {
+							if(per.contains.Trim().ToLower() == artist.Trim().ToLower()) {
+								return per.filename;
+							}
+						}
+						else if(per.type == pairtype.audiofilename) {
+							if(per.contains.Trim().ToLower() == audiofilename.Trim().ToLower()) {
+								return per.filename;
+							}
+						}
+
+					}
+				}
+			}
+			return "wmp_empty";
+		}
     }
     public static class StringExtensions {
         public static bool Contains(this string source, string toCheck, StringComparison comp) {

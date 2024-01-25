@@ -32,6 +32,15 @@ namespace Discord_WMP {
             specificalbumname_name.SetWatermark("Album name");
             specificalbumname_filename.SetWatermark("Filename of albumart");
             specificalbumname_priority.SetWatermark("Art search priority (default 0)");
+
+            artistsname_artist.SetWatermark("Artist name");
+            artistsname_filename.SetWatermark("Filename of albumart");
+            artistsname_priority.SetWatermark("Art search priority (default 3)");
+
+            filenameis_audiofilename.SetWatermark("Audio filename");
+            filenameis_discordfilename.SetWatermark("Filename of albumart");
+            filenameis_priority.SetWatermark("Art search priority (default 0)");
+
             this.FormClosing += AlbumArtAdder_Closing;
         }
 
@@ -76,16 +85,48 @@ namespace Discord_WMP {
             per.contains = titlecontainsword_contains.Text;
             per.doesntcontain = titlecontainsword_containsnot.Text;
             per.priority = 2;
-            bool aaa = int.TryParse(titlecontainsword_containsnot.Text, out int bruh);
+            bool aaa = int.TryParse(titlecontainsword_priority.Text, out int bruh);
             if(aaa) per.priority = bruh;
             Thread.Sleep(66);
             AlbumManager.pairList.Add(per);
             showinlistbox();
         end:;
         }
-        private void AlbumArtAdder_Closing(object sender, FormClosingEventArgs e) {
+		private void artistname_add_Click(object sender, EventArgs e) {
+			if(artistsname_artist.Text == "") { MessageBox.Show("artists name not filled in"); goto end; }
+			if(artistsname_filename.Text == "") { MessageBox.Show("Albumart filename not filled in"); goto end; }
+			pair per = new pair();
+			per.type = pairtype.artistname;
+			per.filename = artistsname_filename.Text;
+			per.contains = artistsname_artist.Text;
+            per.doesntcontain = "";
+			per.priority = 3;
+			bool aaa = int.TryParse(artistsname_priority.Text, out int bruh);
+			if(aaa) per.priority = bruh;
+			Thread.Sleep(66);
+			AlbumManager.pairList.Add(per);
+			showinlistbox();
+		end:;
+		}
+		private void filenameis_add_Click(object sender, EventArgs e) {
+			if(filenameis_audiofilename.Text == "") { MessageBox.Show("Audio's filename not filled in"); goto end; }
+			if(filenameis_discordfilename.Text == "") { MessageBox.Show("Discord album art filename not filled in"); goto end; }
+			pair per = new pair();
+			per.type = pairtype.audiofilename;
+			per.filename = filenameis_discordfilename.Text;
+			per.contains = filenameis_audiofilename.Text;
+			per.doesntcontain = "";
+			per.priority = 0;
+			bool aaa = int.TryParse(artistsname_priority.Text, out int bruh);
+			if(aaa) per.priority = bruh;
+			Thread.Sleep(66);
+			AlbumManager.pairList.Add(per);
+			showinlistbox();
+		end:;
+		}
+		private void AlbumArtAdder_Closing(object sender, FormClosingEventArgs e) {
             AlbumManager.writecsv();
-        }
+		}
         private void AlbumArtAdder_Load(object sender, EventArgs e) {
             AlbumManager.LoadListFromCsv();
             showinlistbox();
@@ -135,10 +176,17 @@ namespace Discord_WMP {
             Form1.ActiveForm.TopMost = true;
             Form1.ActiveForm.Activate();
             Form1.albummanageropen = false;
+
+			Thread.Sleep(66);
+			AlbumManager.LoadListFromCsv();
+		}
+
+		private void AlbumArtAdder_SizeChanged(object sender, EventArgs e) {
+            listBox1.Height = this.Height - (506 - 433);
 		}
 	}
 	//create int enum "pairtype" with names "albumstring", "albumcontains" and "titlecontains"
-	public enum pairtype : int {albumstring, albumcontains, titlecontains};
+	public enum pairtype : int {albumstring, albumcontains, titlecontains, audiofilename, artistname};
     public struct pair {
         public string filename { get; set; }
         public pairtype type { get; set; }

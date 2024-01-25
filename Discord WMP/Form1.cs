@@ -25,8 +25,8 @@ namespace Discord_WMP {
 		//public static string version = "2.0";
 		//public static string commit = "0c0b602"; //this value is always gonna be 1 commit behind in source code, because it is updated after commit
 
-        const string version = "v2.2";
-        const string date = "18.1.24";
+        const string version = "v2.2.1";
+        const string date = "25.1.24";
 		string versionn = $"{Discord_WMP.Properties.Resources.CurrentCommit.Trim()} {version} {date}";
 
 		public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
@@ -140,6 +140,7 @@ namespace Discord_WMP {
             public string title;
 			public string album;
 			public string artist;
+            public string audiofilename;
 
 			public string lenght;
 			public string position;
@@ -185,6 +186,8 @@ namespace Discord_WMP {
                     data.title = player.currentMedia.getItemInfo("Title");
                     data.album = player.currentMedia.getItemInfo("WM/AlbumTitle");
                     data.artist = player.currentMedia.getItemInfo("WM/AlbumArtist");
+                    data.audiofilename = player.currentMedia.getItemInfo("WM/OriginalFilename");
+
                     data.lenght = player.currentMedia.durationString;
                     data.position = player.controls.currentPositionString;
                     data.lenght_sec = player.currentMedia.duration;
@@ -193,6 +196,7 @@ namespace Discord_WMP {
                     data.guid = player.currentMedia.getItemInfo("WMCollectionID");
                     data.path = player.currentMedia.sourceURL;
                     data.media_type = player.currentMedia.getItemInfo("MediaType");
+
 
                     break;
                 }
@@ -286,7 +290,7 @@ namespace Discord_WMP {
 					data.album = data.title.Substring(data.title.IndexOf(" - ") + 3);
 				}
 				playeddata = data.title + "\n " + data.artist + "\n " + data.album + "\n " + "\n" + time + "\n" + progressbar(mil, 21);
-				string albumart = AlbumManager.getalbumart(data.album, data.title);
+				string albumart = AlbumManager.getalbumart(data.album, data.title, data.artist, data.audiofilename);
 				playeddata += "\n" + albumart;
 				this.Refresh();
 
