@@ -27,5 +27,8 @@ https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/assets/44525446/99
 *you may also enter priority in which the album art is searched. 0 is highest priority, 9 is lower priority
 *click close on the album manager window, and it will automatically save (the pairs are saved in albumarts.csv, do not delete the file!)
 ![obrazek](https://user-images.githubusercontent.com/44525446/219904571-69262432-adab-40d5-aa97-b849181924e0.png)
+* if the info was entered correctly, it should now show the matching album art file name in bottom corner:
+* ![image](https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/assets/44525446/1dd259ae-15b9-4d53-9b07-51873d5cf7ea)
+
 
 if you do not want to use the custom album arts, you can use app id "1076519967631093891"
