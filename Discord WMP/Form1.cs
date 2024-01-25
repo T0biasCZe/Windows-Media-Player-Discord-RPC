@@ -26,13 +26,12 @@ namespace Discord_WMP {
 		//public static string version = "2.0";
 		//public static string commit = "0c0b602"; //this value is always gonna be 1 commit behind in source code, because it is updated after commit
 
-        const string version = "v2.2.1";
+        const string version = "v2.2.1b";
         const string date = "25.1.24";
 		string versionn = $"{Discord_WMP.Properties.Resources.CurrentCommit.Trim()} {version} {date}";
 
 		public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
 
-        albummanager AlbumManager = new albummanager();
         public RemotedWindowsMediaPlayer rm = new RemotedWindowsMediaPlayer();
         //RemotedWindowsMediaPlayer rm;
         private bool show_author;
@@ -294,7 +293,7 @@ namespace Discord_WMP {
 					data.album = data.title.Substring(data.title.IndexOf(" - ") + 3);
 				}
 				playeddata = data.title + "\n " + data.artist + "\n " + data.album + "\n " + "\n" + time + "\n" + progressbar(mil, 21);
-				string albumart = AlbumManager.getalbumart(data.album, data.title, data.artist, data.audiofilename);
+				string albumart = albummanager.getalbumart(data.album, data.title, data.artist, data.audiofilename);
 				playeddata += "\n" + albumart;
 				this.Refresh();
 
@@ -404,7 +403,7 @@ namespace Discord_WMP {
 
         private void Form1_Load(object sender, EventArgs e) {
             Console.WriteLine("veemo");
-            AlbumManager.LoadListFromCsv();
+			albummanager.LoadListFromCsv();
             if(!show_console) {
                 var handle = GetConsoleWindow();
                 // Show console during boot

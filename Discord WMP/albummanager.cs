@@ -9,30 +9,21 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Discord_WMP {
-    public class albummanager {
-        public List<pair> pairList = new List<pair>();
+    public static class albummanager {
+        public static List<pair> pairList = new List<pair>();
         static int attempts = 0;
-        public void LoadListFromCsv() {
-            using(var reader = new StreamReader("albumsarts.csv"))
-            using(var csv = new CsvReader(reader, CultureInfo.InvariantCulture)) {
-                csv.Read();
-                csv.ReadHeader();
-                pairList = csv.GetRecords<pair>().ToList();
-                //try {
-                    //pair per = pairList[0];
-                    //MessageBox.Show(per.album);
-                //}
-                //catch{
-                    //attempts++;
-                    //if(attempts > 100) {
-                        //MessageBox.Show("Failed to load album art list");
-                        //return;
-                    //}
-                    //else LoadListFromCsv();
-                //}
-            }
+        public static void LoadListFromCsv() {
+			pairList.Clear();
+			var reader = new StreamReader("albumsarts.csv");
+
+			var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            csv.Read();
+            csv.ReadHeader();
+            pairList = csv.GetRecords<pair>().ToList();
+			csv.Dispose();
+			reader.Close();
         }
-        public void writecsv() {
+        public static void writecsv() {
             using(var writer = new StreamWriter("albumsarts.csv"))
             using(var csv = new CsvWriter(writer, CultureInfo.InvariantCulture)) {
                 csv.WriteHeader<pair>();
@@ -41,10 +32,10 @@ namespace Discord_WMP {
             }
         }
 
-        public string getalbumart(string album, string title) {
+        public static string getalbumart(string album, string title) {
             return getalbumart(album, title, "", "");
         }
-        public string getalbumart(string album, string title, string artist, string audiofilename) {
+        public static string getalbumart(string album, string title, string artist, string audiofilename) {
 			for(int i = 0; i < 10; i++) {
 				foreach(pair per in pairList) {
 					if(per.priority == i) {

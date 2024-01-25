@@ -16,7 +16,6 @@ using System.IO;
 
 namespace Discord_WMP {
     public partial class AlbumArtAdder : Form {
-        albummanager AlbumManager = new albummanager();
         public AlbumArtAdder() {
             InitializeComponent();
             titlecontainsword_contains_filename.SetWatermark("Filename of albumart");
@@ -55,7 +54,7 @@ namespace Discord_WMP {
             bool aaa = int.TryParse(specificalbumname_priority.Text, out int bruh);
             if(aaa) per.priority = bruh;
             Thread.Sleep(66);
-            AlbumManager.pairList.Add(per);
+			albummanager.pairList.Add(per);
             showinlistbox();
         end:;
         }
@@ -71,7 +70,7 @@ namespace Discord_WMP {
             bool aaa = int.TryParse(albumcontainsword_containsnot.Text, out int bruh);
             if(aaa) per.priority = bruh;
             Thread.Sleep(66);
-            AlbumManager.pairList.Add(per);
+			albummanager.pairList.Add(per);
             showinlistbox();
         end:;
         }
@@ -88,7 +87,7 @@ namespace Discord_WMP {
             bool aaa = int.TryParse(titlecontainsword_priority.Text, out int bruh);
             if(aaa) per.priority = bruh;
             Thread.Sleep(66);
-            AlbumManager.pairList.Add(per);
+			albummanager.pairList.Add(per);
             showinlistbox();
         end:;
         }
@@ -104,7 +103,7 @@ namespace Discord_WMP {
 			bool aaa = int.TryParse(artistsname_priority.Text, out int bruh);
 			if(aaa) per.priority = bruh;
 			Thread.Sleep(66);
-			AlbumManager.pairList.Add(per);
+			albummanager.pairList.Add(per);
 			showinlistbox();
 		end:;
 		}
@@ -117,18 +116,18 @@ namespace Discord_WMP {
 			per.contains = filenameis_audiofilename.Text;
 			per.doesntcontain = "";
 			per.priority = 0;
-			bool aaa = int.TryParse(artistsname_priority.Text, out int bruh);
+			bool aaa = int.TryParse(filenameis_priority.Text, out int bruh);
 			if(aaa) per.priority = bruh;
 			Thread.Sleep(66);
-			AlbumManager.pairList.Add(per);
+			albummanager.pairList.Add(per);
 			showinlistbox();
 		end:;
 		}
 		private void AlbumArtAdder_Closing(object sender, FormClosingEventArgs e) {
-            AlbumManager.writecsv();
+			albummanager.writecsv();
+            Console.WriteLine("wrote csv");
 		}
         private void AlbumArtAdder_Load(object sender, EventArgs e) {
-            AlbumManager.LoadListFromCsv();
             showinlistbox();
 
             //else MessageBox.Show("didnt find albumarts.csv, will create new one");
@@ -142,7 +141,7 @@ namespace Discord_WMP {
             listBox1.CustomTabOffsets.Add(300);
             listBox1.CustomTabOffsets.Add(340);
             listBox1.Items.Add("filename ;;; entry data \t priority \t entry type");
-            foreach(pair pér in AlbumManager.pairList) {
+            foreach(pair pér in albummanager.pairList) {
                 if(pér.type == 0) {
                     listBox1.Items.Add((pér.filename + " ;;; " + pér.album).Truncate(75) + "\t" + pér.priority + "\t (album name)");
                 }
@@ -152,7 +151,13 @@ namespace Discord_WMP {
                 else if(pér.type == pairtype.titlecontains) {
                     listBox1.Items.Add(pér.filename + " ;;; " + pér.contains + " ;;; " + pér.doesntcontain + "\t" + pér.priority + "\t (words contained in title name)");
                 }
-            }
+				else if(pér.type == pairtype.artistname) {
+					listBox1.Items.Add(pér.filename + " ;;; " + pér.contains + " ;;; " + pér.doesntcontain + "\t" + pér.priority + "\t (artists name)");
+				}
+				else if(pér.type == pairtype.audiofilename) {
+					listBox1.Items.Add(pér.filename + " ;;; " + pér.contains + " ;;; " + pér.doesntcontain + "\t" + pér.priority + "\t (audio file name)");
+				}
+			}
         }
 
         private void label3_Click(object sender, EventArgs e) {
@@ -178,7 +183,6 @@ namespace Discord_WMP {
             Form1.albummanageropen = false;
 
 			Thread.Sleep(66);
-			AlbumManager.LoadListFromCsv();
 		}
 
 		private void AlbumArtAdder_SizeChanged(object sender, EventArgs e) {

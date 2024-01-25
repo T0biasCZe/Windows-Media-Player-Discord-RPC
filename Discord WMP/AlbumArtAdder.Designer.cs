@@ -255,7 +255,7 @@
 			this.label6.Name = "label6";
 			this.label6.Size = new System.Drawing.Size(224, 16);
 			this.label6.TabIndex = 28;
-			this.label6.Text = "Finding art based on artist";
+			this.label6.Text = "Finding art based on filename (inc file extension)";
 			// 
 			// filenameis_audiofilename
 			// 
