@@ -44,6 +44,7 @@
 			this.label2 = new System.Windows.Forms.Label();
 			this.linkLabel1 = new System.Windows.Forms.LinkLabel();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+			this.label7 = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.numericUpDown_retryattempts)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -222,12 +223,22 @@
 			// 
 			this.toolTip1.ToolTipTitle = "settings";
 			// 
+			// label7
+			// 
+			this.label7.AutoSize = true;
+			this.label7.Location = new System.Drawing.Point(227, 111);
+			this.label7.Name = "label7";
+			this.label7.Size = new System.Drawing.Size(35, 13);
+			this.label7.TabIndex = 24;
+			this.label7.Text = "label7";
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
 			this.ClientSize = new System.Drawing.Size(192, 121);
+			this.Controls.Add(this.label7);
 			this.Controls.Add(this.linkLabel1);
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.checkBox_dontautohide);
@@ -277,6 +288,7 @@
 		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.LinkLabel linkLabel1;
 		private System.Windows.Forms.ToolTip toolTip1;
+		private System.Windows.Forms.Label label7;
 	}
 }
 

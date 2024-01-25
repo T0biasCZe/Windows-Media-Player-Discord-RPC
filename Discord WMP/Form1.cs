@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Text;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -141,6 +142,7 @@ namespace Discord_WMP {
 			public string album;
 			public string artist;
             public string audiofilename;
+            public string audiofilepath;
 
 			public string lenght;
 			public string position;
@@ -186,8 +188,9 @@ namespace Discord_WMP {
                     data.title = player.currentMedia.getItemInfo("Title");
                     data.album = player.currentMedia.getItemInfo("WM/AlbumTitle");
                     data.artist = player.currentMedia.getItemInfo("WM/AlbumArtist");
-                    data.audiofilename = player.currentMedia.getItemInfo("WM/OriginalFilename");
-
+                    data.audiofilepath = player.controls.currentItem.sourceURL;
+                    //get filename from the path
+                    data.audiofilename = Path.GetFileName(data.audiofilepath);
                     data.lenght = player.currentMedia.durationString;
                     data.position = player.controls.currentPositionString;
                     data.lenght_sec = player.currentMedia.duration;
@@ -249,6 +252,7 @@ namespace Discord_WMP {
             label4.Text = "send_data_lasttime " + send_data_lasttime.ToString();
             label5.Text = "play_state " + data.play_state.ToString();
             label6.Text = "mediatype " + data.media_type;
+			label7.Text = "audiofilename " + data.audiofilename;
 
 		}
 		bool initialized = false;
