@@ -199,9 +199,9 @@ namespace Discord_WMP {
 			if(File.Exists(thumbnail_path)) {
 				byte[] buffer = File.ReadAllBytes(thumbnail_path);
 				response.ContentLength64 = buffer.Length;
-				Stream st = response.OutputStream;
-				st.Write(buffer, 0, buffer.Length);
-				st.Close();
+				using(Stream st = response.OutputStream) {
+					st.Write(buffer, 0, buffer.Length);
+				}
 			}
 			else {
 				response.StatusCode = (int)HttpStatusCode.NotFound;
