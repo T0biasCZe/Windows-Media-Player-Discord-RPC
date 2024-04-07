@@ -169,23 +169,29 @@ namespace Discord_WMP {
 		static HttpListener listener = new HttpListener();
 		static void StartServer() {
 			string prefix = $"http://localhost:{Form1.random_port}/";
+
 			listener.Prefixes.Add(prefix); // Add your localhost address
 			listener.Start();
 			Console.WriteLine("Listening on " + prefix);
 		}
 		static void ListenerCallback(IAsyncResult result) {
-			HttpListener listener = (HttpListener)result.AsyncState;
+			//HttpListener listener = (HttpListener)result.AsyncState;
 			// Call EndGetContext to complete the asynchronous operation.
-			HttpListenerContext context = listener.EndGetContext(result);
-			/*if(context.Request.RemoteEndPoint.Address.ToString() != "localhost") {
-				Console.WriteLine("not localhost");
-				context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-				context.Response.Close();
-				return;
-			}*/
-			ProcessRequest(context);
-			// Start listening for next request
-			listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
+			HttpListenerContext context;
+			try {
+				context = listener.EndGetContext(result);
+				if(!context.Request.IsLocal) {
+					Console.WriteLine("request from not localhost");
+					context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+					context.Response.Close();
+					return;
+				}
+				ProcessRequest(context);
+			}
+			finally {
+				// Start listening for next request
+				listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
+			}
 		}
 		static void checkRequests() {
 			if(listener.IsListening) {
@@ -194,20 +200,24 @@ namespace Discord_WMP {
 		}
 		static void ProcessRequest(HttpListenerContext context) {
 			HttpListenerRequest request = context.Request;
-			HttpListenerResponse response = context.Response;
+			using(HttpListenerResponse response = context.Response) {
+				if(File.Exists(thumbnail_path)) {
+					response.ContentType = "image/jpeg";
 
-			if(File.Exists(thumbnail_path)) {
-				byte[] buffer = File.ReadAllBytes(thumbnail_path);
-				response.ContentLength64 = buffer.Length;
-				using(Stream st = response.OutputStream) {
-					st.Write(buffer, 0, buffer.Length);
+					using(FileStream fileStream = File.OpenRead(thumbnail_path)) {
+						response.ContentLength64 = fileStream.Length;
+
+						byte[] buffer = new byte[4096];
+						int bytesRead;
+						while((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0) {
+							response.OutputStream.Write(buffer, 0, bytesRead);
+						}
+					}
+				}
+				else {
+					response.StatusCode = (int)HttpStatusCode.NotFound;
 				}
 			}
-			else {
-				response.StatusCode = (int)HttpStatusCode.NotFound;
-			}
-
-			response.Close();
 		}
 	}
 }

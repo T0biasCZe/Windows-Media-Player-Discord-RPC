@@ -42,7 +42,6 @@ namespace Discord_WMP {
         private bool use_rpc;
         public DiscordRpcClient client;
         public static int random_port;
-        public static bool isAvailable = true;
         public static bool albummanageropen = false;
 
 		[DllImport("kernel32.dll")]
@@ -89,24 +88,28 @@ namespace Discord_WMP {
 			ShowWindow(handle, SW_SHOW);
 
 			Random random = new Random();
-        woomy:;
-            random_port = random.Next(49152, 65535);
-			//check if port is being used and if it is, generate new one
-			IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
-			TcpConnectionInformation[] tcpConnInfoArray = ipGlobalProperties.GetActiveTcpConnections();
+            bool isAvailable = false;
+			while(isAvailable == false) {
+				random_port = random.Next(49152, 65535);
+				//check if port is being used and if it is, generate new one
+				IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
+				TcpConnectionInformation[] tcpConnInfoArray = ipGlobalProperties.GetActiveTcpConnections();
 
-			foreach(TcpConnectionInformation tcpi in tcpConnInfoArray) {
-				if(tcpi.LocalEndPoint.Port == random_port) {
-					isAvailable = false;
-					break;
+				foreach(TcpConnectionInformation tcpi in tcpConnInfoArray) {
+					if(tcpi.LocalEndPoint.Port == random_port) {
+						isAvailable = false;
+                        continue;
+					}
+                    else {
+						isAvailable = true;
+                    }
 				}
-			}
-            if(isAvailable == false) {
-                isAvailable = true;
-				goto woomy;
 			}
 			Console.SetWindowSize(50, 15);
             InitializeComponent();
+
+			linkLabel2.Text = $"http://localhost:{random_port}/";
+			linkLabel2.Links.Add(0, linkLabel2.Text.Length, $"http://localhost:{random_port}/");
 
 			rm.Dock = DockStyle.Fill;
 
@@ -134,7 +137,119 @@ namespace Discord_WMP {
 			Console.WriteLine("Loading app, please wait:)");
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.SmoothingText_Paint);
         }
-        public struct playback_data {
+		private void Form1_Deactivate(object sender, EventArgs e) {
+			//check if console is active
+			var handle = GetConsoleWindow();
+			var foregroundHandle = GetForegroundWindow();
+			bool consoleopen = (foregroundHandle == handle);
+			if(!albummanageropen && !consoleopen && !checkBox_dontautohide.Checked) {
+				Hide();
+
+				// Hide
+				ShowWindow(handle, SW_HIDE);
+				notifyIcon1.Visible = true;
+				notifyIcon1.BalloonTipText = "Veemo";
+				notifyIcon1.Text = "Windows Media Player Discord RPC";
+				notifyIcon1.ShowBalloonTip(1000);
+			}
+		}
+		private void RestoreForm() {
+			if(show_console) {
+				var handle = GetConsoleWindow();
+				ShowWindow(handle, SW_SHOW);
+			}
+			Show();
+			WindowState = FormWindowState.Normal;
+			notifyIcon1.Visible = false;
+		}
+		protected override void OnFormClosing(FormClosingEventArgs e) {
+			notifyIcon1.Dispose();
+			base.OnFormClosing(e);
+			systemMediaControls._run_server = false;
+		}
+		private void Form1_Load(object sender, EventArgs e) {
+			Console.WriteLine("veemo");
+			albummanager.LoadListFromCsv();
+			if(!show_console) {
+				var handle = GetConsoleWindow();
+				// Show console during boot
+				ShowWindow(handle, SW_HIDE);
+			}
+		}
+
+		private void client_id_TextChanged(object sender, EventArgs e) {
+			//set rpc_id in settings1 to client_id.Text
+			Settings1.Default.RPC_ID = client_id.Text;
+		}
+		private static bool loadingsettings = false;
+		private void settingsload() {
+			loadingsettings = true;
+			show_album = Settings1.Default.show_album;
+			show_albumart = Settings1.Default.show_albumart;
+			show_author = Settings1.Default.show_author;
+			show_progressbar = Settings1.Default.show_progressbar;
+			client_id.Text = Settings1.Default.RPC_ID;
+			show_console = Settings1.Default.show_console;
+			checkBox_showconsole.Checked = show_console;
+			send_media_info = Settings1.Default.send_media_info;
+			checkBox_sendMediaInfo.Checked = send_media_info;
+			use_rpc = Settings1.Default.show_discord;
+			checkBox_userpc.Checked = use_rpc;
+
+			Console.WriteLine("loaded settings");
+			loadingsettings = false;
+		}
+		private void Form1_Closing(object sender, FormClosingEventArgs e) {
+			Console.WriteLine("saved settings");
+			//save settings
+			Settings1.Default.Save();
+			//close the console window
+			//get handlr
+			var handle = GetConsoleWindow();
+			Application.Exit();
+		}
+
+		private void checkBox_changed(object sender, EventArgs e) {
+			//do nothing if settings are loading
+			if(loadingsettings) return;
+			send_media_info = checkBox_sendMediaInfo.Checked;
+			Settings1.Default.send_media_info = send_media_info;
+			show_console = checkBox_showconsole.Checked;
+			Settings1.Default.show_console = show_console;
+			use_rpc = checkBox_userpc.Checked;
+			Settings1.Default.show_discord = use_rpc;
+
+			var handle = GetConsoleWindow();
+			if(show_console) ShowWindow(handle, SW_SHOW);
+			else ShowWindow(handle, SW_HIDE);
+
+			Console.WriteLine("saved settings");
+			Settings1.Default.Save();
+		}
+		private void button1_Click(object sender, EventArgs e) {
+			//open albumartadder form
+			albummanageropen = true;
+			AlbumArtAdder form = new AlbumArtAdder();
+			form.Show();
+		}
+
+		private void button_resizeBack_Click(object sender, EventArgs e) {
+			this.Height = 160;
+			this.Width = 208;
+		}
+
+		private void button_settings_Click(object sender, EventArgs e) {
+			if(this.Height > 160) {
+				this.Height = 160;
+				this.Width = 208;
+			}
+			else {
+				this.Width = 400;
+				this.Height = 428;
+			}
+		}
+
+		public struct playback_data {
             public string title;
 			public string album;
 			public string artist;
@@ -214,36 +329,6 @@ namespace Discord_WMP {
             return data;
         }
 
-		private void Form1_Deactivate(object sender, EventArgs e) {
-			//check if console is active
-			var handle = GetConsoleWindow();
-            var foregroundHandle = GetForegroundWindow();
-            bool consoleopen = (foregroundHandle == handle);
-			if(!albummanageropen && !consoleopen && !checkBox_dontautohide.Checked) {
-                Hide();
-
-                // Hide
-                ShowWindow(handle, SW_HIDE);
-                notifyIcon1.Visible = true;
-                notifyIcon1.BalloonTipText = "Veemo";
-                notifyIcon1.Text = "Windows Media Player Discord RPC";
-                notifyIcon1.ShowBalloonTip(1000);
-            }
-		}
-		private void RestoreForm() {
-            if(show_console) {
-                var handle = GetConsoleWindow();
-                ShowWindow(handle, SW_SHOW);
-            }
-            Show();
-            WindowState = FormWindowState.Normal;
-            notifyIcon1.Visible = false;
-        }
-        protected override void OnFormClosing(FormClosingEventArgs e) {
-            notifyIcon1.Dispose();
-            base.OnFormClosing(e);
-            systemMediaControls._run_server = false;
-		}
 		private void debug(playback_data data) {
             label3.Text = "initialized " + initialized.ToString();
             label4.Text = "send_data_lasttime " + send_data_lasttime.ToString();
@@ -413,66 +498,6 @@ namespace Discord_WMP {
 			};
 			client.Dispose();
 		}
-
-        private void Form1_Load(object sender, EventArgs e) {
-            Console.WriteLine("veemo");
-			albummanager.LoadListFromCsv();
-            if(!show_console) {
-                var handle = GetConsoleWindow();
-                // Show console during boot
-                ShowWindow(handle, SW_HIDE);
-            }
-		}
-
-        private void client_id_TextChanged(object sender, EventArgs e) {
-            //set rpc_id in settings1 to client_id.Text
-            Settings1.Default.RPC_ID = client_id.Text;
-        }
-        private static bool loadingsettings = false;
-        private void settingsload() {
-            loadingsettings = true;
-            show_album = Settings1.Default.show_album;
-            show_albumart = Settings1.Default.show_albumart;
-            show_author = Settings1.Default.show_author;
-            show_progressbar = Settings1.Default.show_progressbar;
-            client_id.Text = Settings1.Default.RPC_ID;
-            show_console = Settings1.Default.show_console;
-            checkBox_showconsole.Checked = show_console;
-			send_media_info = Settings1.Default.send_media_info;
-			checkBox_sendMediaInfo.Checked = send_media_info;
-            use_rpc = Settings1.Default.show_discord;
-            checkBox_userpc.Checked = use_rpc;
-
-			Console.WriteLine("loaded settings");
-            loadingsettings = false;
-		}
-        private void Form1_Closing(object sender, FormClosingEventArgs e) {
-            Console.WriteLine("saved settings");
-            //save settings
-            Settings1.Default.Save();
-            //close the console window
-            //get handlr
-            var handle = GetConsoleWindow();
-            Application.Exit();
-        }
-
-        private void checkBox_changed(object sender, EventArgs e) {
-            //do nothing if settings are loading
-            if(loadingsettings) return;
-            send_media_info = checkBox_sendMediaInfo.Checked;
-            Settings1.Default.send_media_info = send_media_info;
-            show_console = checkBox_showconsole.Checked;
-            Settings1.Default.show_console = show_console;
-            use_rpc = checkBox_userpc.Checked;
-            Settings1.Default.show_discord = use_rpc;
-
-            var handle = GetConsoleWindow();
-            if(show_console) ShowWindow(handle, SW_SHOW);
-			else ShowWindow(handle, SW_HIDE);
-
-            Console.WriteLine("saved settings");
-			Settings1.Default.Save();
-		}
         private string progressbar(double value, int lenght) {
             string bar = "";
             int progress = (int)(value * lenght);
@@ -507,29 +532,6 @@ namespace Discord_WMP {
             }
 
         }
-
-        private void button1_Click(object sender, EventArgs e) {
-            //open albumartadder form
-            albummanageropen = true;
-            AlbumArtAdder form = new AlbumArtAdder();
-            form.Show();
-        }
-
-		private void button_resizeBack_Click(object sender, EventArgs e) {
-            this.Height = 160;
-            this.Width = 208;
-		}
-
-		private void button_settings_Click(object sender, EventArgs e) {
-            if(this.Height > 160) {
-				this.Height = 160;
-                this.Width = 208;
-			}
-			else {
-				this.Width = 400;
-                this.Height = 428;
-			}
-		}
 	}
 	//create new class for extension method
 	public static class ExtensionMethods {

@@ -46,6 +46,7 @@
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.label7 = new System.Windows.Forms.Label();
 			this.label8 = new System.Windows.Forms.Label();
+			this.linkLabel2 = new System.Windows.Forms.LinkLabel();
 			((System.ComponentModel.ISupportInitialize)(this.numericUpDown_retryattempts)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -102,7 +103,7 @@
 			// checkBox_showconsole
 			// 
 			this.checkBox_showconsole.AutoSize = true;
-			this.checkBox_showconsole.Location = new System.Drawing.Point(0, 268);
+			this.checkBox_showconsole.Location = new System.Drawing.Point(0, 280);
 			this.checkBox_showconsole.Name = "checkBox_showconsole";
 			this.checkBox_showconsole.Size = new System.Drawing.Size(91, 17);
 			this.checkBox_showconsole.TabIndex = 9;
@@ -113,7 +114,7 @@
 			// checkBox_userpc
 			// 
 			this.checkBox_userpc.AutoSize = true;
-			this.checkBox_userpc.Location = new System.Drawing.Point(0, 294);
+			this.checkBox_userpc.Location = new System.Drawing.Point(0, 306);
 			this.checkBox_userpc.Name = "checkBox_userpc";
 			this.checkBox_userpc.Size = new System.Drawing.Size(109, 17);
 			this.checkBox_userpc.TabIndex = 10;
@@ -124,7 +125,7 @@
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(5, 314);
+			this.label1.Location = new System.Drawing.Point(5, 326);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(70, 13);
 			this.label1.TabIndex = 13;
@@ -132,7 +133,7 @@
 			// 
 			// numericUpDown_retryattempts
 			// 
-			this.numericUpDown_retryattempts.Location = new System.Drawing.Point(81, 311);
+			this.numericUpDown_retryattempts.Location = new System.Drawing.Point(81, 323);
 			this.numericUpDown_retryattempts.Name = "numericUpDown_retryattempts";
 			this.numericUpDown_retryattempts.Size = new System.Drawing.Size(66, 20);
 			this.numericUpDown_retryattempts.TabIndex = 14;
@@ -194,7 +195,7 @@
 			// checkBox_dontautohide
 			// 
 			this.checkBox_dontautohide.AutoSize = true;
-			this.checkBox_dontautohide.Location = new System.Drawing.Point(0, 342);
+			this.checkBox_dontautohide.Location = new System.Drawing.Point(0, 354);
 			this.checkBox_dontautohide.Name = "checkBox_dontautohide";
 			this.checkBox_dontautohide.Size = new System.Drawing.Size(70, 17);
 			this.checkBox_dontautohide.TabIndex = 21;
@@ -213,7 +214,7 @@
 			// linkLabel1
 			// 
 			this.linkLabel1.AutoSize = true;
-			this.linkLabel1.Location = new System.Drawing.Point(5, 367);
+			this.linkLabel1.Location = new System.Drawing.Point(5, 379);
 			this.linkLabel1.Name = "linkLabel1";
 			this.linkLabel1.Size = new System.Drawing.Size(89, 13);
 			this.linkLabel1.TabIndex = 23;
@@ -242,12 +243,23 @@
 			this.label8.TabIndex = 25;
 			this.label8.Text = "label8";
 			// 
+			// linkLabel2
+			// 
+			this.linkLabel2.AutoSize = true;
+			this.linkLabel2.Location = new System.Drawing.Point(16, 264);
+			this.linkLabel2.Name = "linkLabel2";
+			this.linkLabel2.Size = new System.Drawing.Size(55, 13);
+			this.linkLabel2.TabIndex = 26;
+			this.linkLabel2.TabStop = true;
+			this.linkLabel2.Text = "linkLabel2";
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
-			this.ClientSize = new System.Drawing.Size(192, 121);
+			this.ClientSize = new System.Drawing.Size(856, 801);
+			this.Controls.Add(this.linkLabel2);
 			this.Controls.Add(this.label8);
 			this.Controls.Add(this.label7);
 			this.Controls.Add(this.linkLabel1);
@@ -301,6 +313,7 @@
 		private System.Windows.Forms.ToolTip toolTip1;
 		private System.Windows.Forms.Label label7;
 		private System.Windows.Forms.Label label8;
+		private System.Windows.Forms.LinkLabel linkLabel2;
 	}
 }
 
