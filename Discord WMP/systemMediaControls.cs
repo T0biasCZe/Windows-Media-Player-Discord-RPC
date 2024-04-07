@@ -174,12 +174,12 @@ namespace Discord_WMP {
 			listener.Start();
 			Console.WriteLine("Listening on " + prefix);
 		}
+		static AsyncCallback callback = new AsyncCallback(ListenerCallback);
 		static void ListenerCallback(IAsyncResult result) {
 			//HttpListener listener = (HttpListener)result.AsyncState;
 			// Call EndGetContext to complete the asynchronous operation.
-			HttpListenerContext context;
 			try {
-				context = listener.EndGetContext(result);
+				HttpListenerContext context = listener.EndGetContext(result);
 				if(!context.Request.IsLocal) {
 					Console.WriteLine("request from not localhost");
 					context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -187,19 +187,21 @@ namespace Discord_WMP {
 					return;
 				}
 				ProcessRequest(context);
+				context.Response.Close();
 			}
 			finally {
 				// Start listening for next request
-				listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
+				//listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
+				listener.BeginGetContext(callback, listener);
 			}
 		}
 		static void checkRequests() {
 			if(listener.IsListening) {
-				listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
+				//listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
+				listener.BeginGetContext(callback, listener);
 			}
 		}
 		static void ProcessRequest(HttpListenerContext context) {
-			HttpListenerRequest request = context.Request;
 			using(HttpListenerResponse response = context.Response) {
 				if(File.Exists(thumbnail_path)) {
 					response.ContentType = "image/jpeg";

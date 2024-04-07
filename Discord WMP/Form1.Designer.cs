@@ -201,6 +201,7 @@
 			this.checkBox_dontautohide.TabIndex = 21;
 			this.checkBox_dontautohide.Text = "dont hide";
 			this.checkBox_dontautohide.UseVisualStyleBackColor = true;
+			this.checkBox_dontautohide.CheckedChanged += new System.EventHandler(this.checkBox_changed);
 			// 
 			// label2
 			// 
@@ -220,6 +221,7 @@
 			this.linkLabel1.TabIndex = 23;
 			this.linkLabel1.TabStop = true;
 			this.linkLabel1.Text = "linkLabel_version";
+			this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
 			// 
 			// toolTip1
 			// 
@@ -252,6 +254,7 @@
 			this.linkLabel2.TabIndex = 26;
 			this.linkLabel2.TabStop = true;
 			this.linkLabel2.Text = "linkLabel2";
+			this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
 			// 
 			// Form1
 			// 
