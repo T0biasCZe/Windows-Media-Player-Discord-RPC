@@ -201,6 +201,7 @@
 			this.checkBox_dontautohide.TabIndex = 21;
 			this.checkBox_dontautohide.Text = "dont hide";
 			this.checkBox_dontautohide.UseVisualStyleBackColor = true;
+			this.checkBox_dontautohide.CheckedChanged += new System.EventHandler(this.checkBox_changed);
 			// 
 			// label2
 			// 
@@ -220,6 +221,7 @@
 			this.linkLabel1.TabIndex = 23;
 			this.linkLabel1.TabStop = true;
 			this.linkLabel1.Text = "linkLabel_version";
+			this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
 			// 
 			// toolTip1
 			// 
@@ -252,13 +254,14 @@
 			this.linkLabel2.TabIndex = 26;
 			this.linkLabel2.TabStop = true;
 			this.linkLabel2.Text = "linkLabel2";
+			this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
 			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
-			this.ClientSize = new System.Drawing.Size(856, 801);
+			this.ClientSize = new System.Drawing.Size(193, 123);
 			this.Controls.Add(this.linkLabel2);
 			this.Controls.Add(this.label8);
 			this.Controls.Add(this.label7);

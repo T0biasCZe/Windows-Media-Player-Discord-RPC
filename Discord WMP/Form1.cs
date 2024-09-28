@@ -41,7 +41,7 @@ namespace Discord_WMP {
         private bool show_console;
         private bool use_rpc;
         public DiscordRpcClient client;
-        public static int random_port;
+        public static int random_port = 42565;
         public static bool albummanageropen = false;
 
 		[DllImport("kernel32.dll")]
@@ -66,6 +66,49 @@ namespace Discord_WMP {
         }
 
         public Form1() {
+            //check if app is already running by sending http request to "localhost:42565/alive"
+            bool appAlreadyRunning = false;
+            try {
+				HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:42565/alive");
+				request.Timeout = 2000;
+				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+				if(response.StatusCode == HttpStatusCode.OK) {
+                    appAlreadyRunning = true;
+				}
+			}
+			catch(WebException) {
+
+			}
+            if(!appAlreadyRunning) { //app unresponsive or not running, so kill it
+                Process[] processes = Process.GetProcessesByName("Discord WMP");
+				foreach(Process process in processes) {
+                    if(process.Id == Process.GetCurrentProcess().Id) continue;
+					process.Kill();
+				}
+            }
+
+            if(appAlreadyRunning) {
+                if(Environment.GetCommandLineArgs().Contains("getdata")){
+                    //send http request to "localhost:42565/getdata" to get data
+					HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:42565/info");
+					request.Timeout = 1000;
+					HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+					if(response.StatusCode == HttpStatusCode.OK) {
+						//get data from response
+						Stream dataStream = response.GetResponseStream();
+						StreamReader reader = new StreamReader(dataStream);
+						string responseFromServer = reader.ReadToEnd();
+						//send data to console
+						Console.WriteLine(responseFromServer);
+						//close response
+						response.Close();
+						//close app
+						Environment.Exit(0);
+					}
+                }
+                else Environment.Exit(0);
+            }
+
             if(Settings1.Default.first_setup) {
                 loadingsettings = true;
                 DialogResult dialog_userpc = MessageBox.Show("Do you want to put WMP play data into Discord Rich presence?\n(Recommended YES if you have Discord installed)", "Initial setup", MessageBoxButtons.YesNo);
@@ -87,7 +130,7 @@ namespace Discord_WMP {
 			// Show console during boot
 			ShowWindow(handle, SW_SHOW);
 
-			Random random = new Random();
+			/*Random random = new Random();
             bool isAvailable = false;
 			while(isAvailable == false) {
 				random_port = random.Next(49152, 65535);
@@ -104,7 +147,7 @@ namespace Discord_WMP {
 						isAvailable = true;
                     }
 				}
-			}
+			}*/
 			Console.SetWindowSize(50, 15);
             InitializeComponent();
 
@@ -195,6 +238,7 @@ namespace Discord_WMP {
 			checkBox_sendMediaInfo.Checked = send_media_info;
 			use_rpc = Settings1.Default.show_discord;
 			checkBox_userpc.Checked = use_rpc;
+            checkBox_dontautohide.Checked = Settings1.Default.dont_hide;
 
 			Console.WriteLine("loaded settings");
 			loadingsettings = false;
@@ -218,6 +262,7 @@ namespace Discord_WMP {
 			Settings1.Default.show_console = show_console;
 			use_rpc = checkBox_userpc.Checked;
 			Settings1.Default.show_discord = use_rpc;
+            Settings1.Default.dont_hide = checkBox_dontautohide.Checked;
 
 			var handle = GetConsoleWindow();
 			if(show_console) ShowWindow(handle, SW_SHOW);
@@ -248,6 +293,11 @@ namespace Discord_WMP {
 				this.Height = 428;
 			}
 		}
+		private void linkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+			string URL = ((LinkLabel)sender).Links[0].LinkData.ToString();
+			Console.WriteLine(URL);
+			System.Diagnostics.Process.Start(URL);
+		}
 
 		public struct playback_data {
             public string title;
@@ -266,6 +316,7 @@ namespace Discord_WMP {
             public string path;
             public string media_type;
 		}
+        //gets current information from Windows Media Player
         public playback_data Data() {
             playback_data data = new playback_data();
             data.artist = ""; data.album = ""; data.title = ""; data.lenght = ""; data.position = ""; data.lenght_sec = -1; data.position_sec = -1; data.play_state = WMPLib.WMPPlayState.wmppsStopped; data.guid = ""; data.path = "";
@@ -328,15 +379,27 @@ namespace Discord_WMP {
         abort:;
             return data;
         }
-
+        //displays the current information from Windows Media Player
 		private void debug(playback_data data) {
             label3.Text = "initialized " + initialized.ToString();
             label4.Text = "send_data_lasttime " + send_data_lasttime.ToString();
             label5.Text = "play_state " + data.play_state.ToString();
             label6.Text = "mediatype " + data.media_type;
 			label7.Text = "audiofilename " + data.audiofilename;
-
 		}
+        public static bool check_discord_running() {
+            //check if executable discord.exe, discordcanary.exe or discordptb.exe is running
+            Process[] pname = Process.GetProcessesByName("discord");
+            Process[] pname2 = Process.GetProcessesByName("discordcanary");
+            Process[] pname3 = Process.GetProcessesByName("discordptb");
+            bool discordrunning = !(pname.Length == 0 && pname2.Length == 0 && pname3.Length == 0);
+            Console.BackgroundColor = ConsoleColor.Cyan;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Discord running: " + discordrunning);
+            Console.ResetColor();
+            return discordrunning;
+        }
+
 		bool initialized = false;
         bool send_data_lasttime = false;
         Stopwatch pause_stopwatch = new Stopwatch();
@@ -346,12 +409,6 @@ namespace Discord_WMP {
             if(data.lenght_sec == -1 || data.position_sec == -1) { 
                 playeddata = "Couldnt find WMP";
                 this.Refresh();
-                if(use_rpc && initialized && send_data_lasttime) {
-                    client.SetPresence(new RichPresence());
-                    send_data_lasttime = false;
-                    Deinitialize();
-                    initialized = false;
-				}
             }
             bool stopped = data.play_state.In(WMPLib.WMPPlayState.wmppsStopped, WMPLib.WMPPlayState.wmppsMediaEnded, WMPLib.WMPPlayState.wmppsUndefined);
             if(data.play_state == WMPPlayState.wmppsPaused) {
@@ -369,18 +426,31 @@ namespace Discord_WMP {
             if(stopped) {
 				playeddata = "Stopped";
 				this.Refresh();
-				if(use_rpc && initialized && send_data_lasttime) {
-					client.SetPresence(new RichPresence());
-					send_data_lasttime = false;
-					Deinitialize();
-					initialized = false;
-                    Console.WriteLine("stopped and deinitialized");
-				}
 			}
 			if(send_media_info) {
                 systemMediaControls.update(data, this);
 			}
             if(use_rpc && !stopped) {
+                if(!check_discord_running()) {
+                    if(initialized) {
+						Console.ForegroundColor = ConsoleColor.Yellow;
+						Console.WriteLine("Discord not running but RPC inited, deiniting");
+						Console.ResetColor();
+						Deinitialize();
+                        initialized = false;
+                    }
+				}
+                else {
+					if(!initialized) {
+						Console.ForegroundColor = ConsoleColor.Yellow;
+						Console.WriteLine("RPC Client not initialized, initing");
+						Initialize();
+						initialized = true;
+						Console.WriteLine("Initialized Discord RPC");
+						Console.ResetColor();
+					}
+				}
+
 				var mil = data.position_sec / data.lenght_sec;
 				var time = data.position + "/" + data.lenght;
 				var playbar = progressbar(mil, 10);
@@ -393,47 +463,8 @@ namespace Discord_WMP {
 				playeddata += "\n" + albumart;
 				this.Refresh();
 
-				bool discord_not_running = false;
-				/*try {
-				}
-				catch {
-                    Console.WriteLine("discord not running");
-					discord_not_running = true;
-				}*/
-				Console.WriteLine("e");
-				label8.Text = "discord_not_running " + discord_not_running.ToString();
-				if(discord_not_running) {
-					if(initialized) {
-						Deinitialize();
-						initialized = false;
-						Console.WriteLine("discord not running, deinitialized");
-					}
-					goto breakout;
-                }
-                if(!initialized) {
-					try {
-						if(client_id != null && client_id.Text.Length >= 3) {
-							Console.WriteLine("valid client id");
-							bool result = Initialize();
-                            if(result) {
-								Console.WriteLine("initialized");
-								initialized = true;
-							}
-                            else {
-                                Console.WriteLine("error initializing RPC.");
-                                initialized = false;
-                                goto breakout;
-							}
-						}
-					}
-					catch {
-						ConsoleColor old = Console.ForegroundColor;
-						Console.ForegroundColor = ConsoleColor.Red;
-						Console.WriteLine("error initializing RPC. Discord propably not running.\n If you do not want to use Discord RPC disable it in checkboxes below");
-						Console.ForegroundColor = old;
-                        goto breakout;
-					}
-				}
+                if(!initialized) return;
+
                 client.SetPresence(new RichPresence() {
                     Details = data.title.Truncate(32),
                     State = data.artist.Truncate(32),
@@ -452,25 +483,38 @@ namespace Discord_WMP {
                 send_data_lasttime = true;
                 Console.WriteLine("set data");
             }
-            else if(!use_rpc && initialized) {
+		    if(send_data_lasttime && initialized && stopped) {
+                client.ClearPresence();
+            }
+            if(!use_rpc && initialized) {
+				client.ClearPresence();
 				Deinitialize();
 				initialized = false;
 			}
-		breakout:;
-		}
+        }
 
 		bool Initialize() {
-            /*
-            Create a Discord client
-            NOTE: 	If you are using Unity3D, you must use the full constructor and define
-                     the pipe connection.
-            */
+            Console.BackgroundColor = ConsoleColor.Cyan;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Initialize() ran");
+            Console.ResetColor();
 
             if(client_id.Text.Length <= 8) {
                 Console.WriteLine("invalid client id");
 				return false;
 			}
-            client = new DiscordRpcClient(client_id.Text);
+            if(client != null) {
+                try {
+                    client.Deinitialize();
+                    client.Dispose();
+                }
+                catch {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Error while deinitializing client while initializing client");
+                    Console.ResetColor();
+                }
+            }
+            client = new DiscordRpcClient(client_id.Text, -1);
 
             //Set the logger
             client.Logger = new ConsoleLogger() { Level = LogLevel.Warning };
@@ -481,7 +525,7 @@ namespace Discord_WMP {
             };
 
             client.OnPresenceUpdate += (sender, e) => {
-                //Console.WriteLine("Received Update! {0}", e.Presence);
+                Console.WriteLine("Received Update! {0}", e.Presence);
             };
 
             //Connect to the RPC
@@ -490,12 +534,6 @@ namespace Discord_WMP {
         }
         void Deinitialize() {
             client.Deinitialize();
-            client.OnPresenceUpdate -= (sender, e) => {
-				//Console.WriteLine("Received Update! {0}", e.Presence);
-			};
-            client.OnReady -= (sender, e) => {
-				Console.WriteLine("Received Ready from user {0}", e.User.Username);
-			};
 			client.Dispose();
 		}
         private string progressbar(double value, int lenght) {
