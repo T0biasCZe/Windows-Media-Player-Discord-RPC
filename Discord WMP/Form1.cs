@@ -41,7 +41,7 @@ namespace Discord_WMP {
         private bool show_console;
         private bool use_rpc;
         public DiscordRpcClient client;
-        public static int random_port;
+        public static int random_port = 42565;
         public static bool albummanageropen = false;
 
 		[DllImport("kernel32.dll")]
@@ -66,6 +66,49 @@ namespace Discord_WMP {
         }
 
         public Form1() {
+            //check if app is already running by sending http request to "localhost:42565/alive"
+            bool appAlreadyRunning = false;
+            try {
+				HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:42565/alive");
+				request.Timeout = 2000;
+				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+				if(response.StatusCode == HttpStatusCode.OK) {
+                    appAlreadyRunning = true;
+				}
+			}
+			catch(WebException) {
+
+			}
+            if(!appAlreadyRunning) { //app unresponsive or not running, so kill it
+                Process[] processes = Process.GetProcessesByName("Discord WMP");
+				foreach(Process process in processes) {
+                    if(process.Id == Process.GetCurrentProcess().Id) continue;
+					process.Kill();
+				}
+            }
+
+            if(appAlreadyRunning) {
+                if(Environment.GetCommandLineArgs().Contains("getdata")){
+                    //send http request to "localhost:42565/getdata" to get data
+					HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:42565/info");
+					request.Timeout = 1000;
+					HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+					if(response.StatusCode == HttpStatusCode.OK) {
+						//get data from response
+						Stream dataStream = response.GetResponseStream();
+						StreamReader reader = new StreamReader(dataStream);
+						string responseFromServer = reader.ReadToEnd();
+						//send data to console
+						Console.WriteLine(responseFromServer);
+						//close response
+						response.Close();
+						//close app
+						Environment.Exit(0);
+					}
+                }
+                else Environment.Exit(0);
+            }
+
             if(Settings1.Default.first_setup) {
                 loadingsettings = true;
                 DialogResult dialog_userpc = MessageBox.Show("Do you want to put WMP play data into Discord Rich presence?\n(Recommended YES if you have Discord installed)", "Initial setup", MessageBoxButtons.YesNo);
@@ -87,7 +130,7 @@ namespace Discord_WMP {
 			// Show console during boot
 			ShowWindow(handle, SW_SHOW);
 
-			Random random = new Random();
+			/*Random random = new Random();
             bool isAvailable = false;
 			while(isAvailable == false) {
 				random_port = random.Next(49152, 65535);
@@ -104,7 +147,7 @@ namespace Discord_WMP {
 						isAvailable = true;
                     }
 				}
-			}
+			}*/
 			Console.SetWindowSize(50, 15);
             InitializeComponent();
 

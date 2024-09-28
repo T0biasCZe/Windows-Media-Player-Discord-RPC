@@ -151,6 +151,9 @@ namespace Discord_WMP {
                 else if(pér.type == pairtype.titlecontains) {
                     listBox1.Items.Add(pér.filename + " ;;; " + pér.contains + " ;;; " + pér.doesntcontain + "\t" + pér.priority + "\t (words contained in title name)");
                 }
+				else if(pér.type == pairtype.audiofilenamecontains) {
+					listBox1.Items.Add(pér.filename + " ;;; " + pér.contains + " ;;; " + pér.doesntcontain + "\t" + pér.priority + "\t (words contained in audiofile name)");
+				}
 				else if(pér.type == pairtype.artistname) {
 					listBox1.Items.Add(pér.filename + " ;;; " + pér.contains + " ;;; " + pér.doesntcontain + "\t" + pér.priority + "\t (artists name)");
 				}
@@ -190,7 +193,7 @@ namespace Discord_WMP {
 		}
 	}
 	//create int enum "pairtype" with names "albumstring", "albumcontains" and "titlecontains"
-	public enum pairtype : int {albumstring, albumcontains, titlecontains, audiofilename, artistname};
+	public enum pairtype : int {albumstring, albumcontains, titlecontains, audiofilename, artistname, audiofilenamecontains};
     public struct pair {
         public string filename { get; set; }
         public pairtype type { get; set; }

@@ -202,6 +202,39 @@ namespace Discord_WMP {
 			}
 		}
 		static void ProcessRequest(HttpListenerContext context) {
+			string url = context.Request.Url.AbsolutePath;
+			if(url == "/") {
+				ProcessRequestImage(context);
+			}
+			else if(url == "/alive") {
+				ProcessRequestAlive(context);
+			}
+			else if(url == "/info") {
+				ProcessRequestInfo(context);
+			} 
+			else {
+				context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+			}
+		}
+		static void ProcessRequestInfo(HttpListenerContext context) {
+			//return string with info about current song in format "Title\nArtist\nAlbum"
+			using(HttpListenerResponse response = context.Response) {
+				response.ContentType = "text/plain";
+				string info = $"{data.title}\n{data.artist}\n{data.album}";
+				byte[] buffer = Encoding.UTF8.GetBytes(info);
+				response.ContentLength64 = buffer.Length;
+				response.OutputStream.Write(buffer, 0, buffer.Length);
+			}
+		}
+		static void ProcessRequestAlive(HttpListenerContext context) {
+			using(HttpListenerResponse response = context.Response) {
+				response.ContentType = "text/plain";
+				response.ContentLength64 = 5;
+				byte[] buffer = Encoding.UTF8.GetBytes("alive");
+				response.OutputStream.Write(buffer, 0, buffer.Length);
+			}
+		}
+		static void ProcessRequestImage(HttpListenerContext context) {
 			using(HttpListenerResponse response = context.Response) {
 				if(File.Exists(thumbnail_path)) {
 					response.ContentType = "image/jpeg";

@@ -66,6 +66,12 @@ namespace Discord_WMP {
 								return per.filename;
 							}
 						}
+						else if(per.type == pairtype.audiofilenamecontains) {
+							if(audiofilename.Contains(per.contains, StringComparison.OrdinalIgnoreCase)) {
+								if(per.doesntcontain.Length > 1) if(!audiofilename.Contains(per.doesntcontain, StringComparison.OrdinalIgnoreCase)) continue;
+								return per.filename;
+							}
+						}
 
 					}
 				}
