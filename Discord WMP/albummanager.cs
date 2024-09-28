@@ -19,7 +19,18 @@ namespace Discord_WMP {
 			var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             csv.Read();
             csv.ReadHeader();
-            pairList = csv.GetRecords<pair>().ToList();
+			try {
+				pairList = csv.GetRecords<pair>().ToList();
+			}
+			catch(Exception e) {
+				//MessageBox.Show("Error reading albumsarts.csv: " + e.Message);
+				ConsoleColor oldColor = Console.ForegroundColor;
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(String.Concat(Enumerable.Repeat("-", Console.BufferWidth)));
+				Console.WriteLine("Error reading albumsarts.csv: " + e.Message);
+				Console.WriteLine(String.Concat(Enumerable.Repeat("-", Console.BufferWidth)));
+				Console.ForegroundColor = oldColor;
+			}
 			csv.Dispose();
 			reader.Close();
         }

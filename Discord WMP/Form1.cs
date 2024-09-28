@@ -24,8 +24,8 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 namespace Discord_WMP {
     public partial class Form1 : Form {
 
-        const string version = "v2.2.2b";
-        const string date = "6.4.24";
+        const string version = "v2.2.2c";
+        const string date = "28.9.24";
 		string versionn = $"{Discord_WMP.Properties.Resources.CurrentCommit.Trim()} {version} {date}";
 
 		public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
