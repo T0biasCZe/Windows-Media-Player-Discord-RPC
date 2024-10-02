@@ -6,20 +6,21 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Windows.Foundation;
+/*using Windows.Foundation;
 using Windows.Media;
 using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
-using Windows.Storage.Streams;
+using Windows.Storage.Streams;*/
 
 namespace Discord_WMP {
 	public static class systemMediaControls {
 		static RemotedWindowsMediaPlayer rm;
-		public static void SystemControls_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args) {
+		/*public static void SystemControls_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args) {
 			switch(args.Button) {
 				case SystemMediaTransportControlsButton.Play:
 					((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.play();
@@ -37,8 +38,8 @@ namespace Discord_WMP {
 					((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.previous();
 					break;
 			}
-		}
-		static SystemMediaTransportControls systemControls = BackgroundMediaPlayer.Current.SystemMediaTransportControls;
+		}*/
+		//static SystemMediaTransportControls systemControls = BackgroundMediaPlayer.Current.SystemMediaTransportControls;
 		public static Form1 form1;
 		public static Form1.playback_data data;
 		public static string thumbnail_path;
@@ -46,11 +47,14 @@ namespace Discord_WMP {
 		public static bool server_running = false;
 		public static bool _run_server = true;
 		public static bool registered_events = false;
+
+		public static bool useMediaKeys = false;
+
 		public static void update(Form1.playback_data data_, Form1 form) {
 			rm = form.rm;
 			data = data_;
 
-			systemControls = BackgroundMediaPlayer.Current.SystemMediaTransportControls;
+			/*systemControls = BackgroundMediaPlayer.Current.SystemMediaTransportControls;
 
 			if(data.play_state == WMPLib.WMPPlayState.wmppsUndefined || data.play_state == WMPLib.WMPPlayState.wmppsStopped) {
 				systemControls.IsEnabled = false;
@@ -74,7 +78,7 @@ namespace Discord_WMP {
 			if(!registered_events) {
 				systemControls.ButtonPressed += SystemControls_ButtonPressed;
 				registered_events = true;
-			}
+			}*/
 			GetAlbumArt();
 
 			if(!server_running) {
@@ -84,7 +88,7 @@ namespace Discord_WMP {
 			else {
 				checkRequests();
 			}
-			systemControls.DisplayUpdater.Type = MediaPlaybackType.Music;
+			/*systemControls.DisplayUpdater.Type = MediaPlaybackType.Music;
 			switch(data.media_type) {
 				case "audio":
 					systemControls.DisplayUpdater.Type = MediaPlaybackType.Music;
@@ -128,7 +132,23 @@ namespace Discord_WMP {
 			systemControls.DisplayUpdater.MusicProperties.AlbumTitle = data.album;
 			systemControls.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri($"http://localhost:{Form1.random_port}"));
 			//systemControls.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri("http://tobikcze.eu/files/822671241697689610.png"));
-			systemControls.DisplayUpdater.Update();
+			systemControls.DisplayUpdater.Update();*/
+
+
+			if(form.checkBox_mediakeys.Checked) {
+				if(useMediaKeys == false) {
+					useMediaKeys = true;
+					Console.WriteLine("registering key listener");
+					MediaKeys.rm = rm;
+					MediaKeys.hookId = MediaKeys.SetHook(MediaKeys.HookCallback);
+				}
+			}
+			else {
+				if(useMediaKeys == true) {
+					useMediaKeys = false;
+					MessageBox.Show("Media keys will be disabled after restarting the application");
+				}
+			}
 		}
 		public static void GetAlbumArt() {
 			thumbnail_path = "noalbumart.png"; // fallback image next to exe
@@ -211,7 +231,7 @@ namespace Discord_WMP {
 			}
 			else if(url == "/info") {
 				ProcessRequestInfo(context);
-			} 
+			}
 			else {
 				context.Response.StatusCode = (int)HttpStatusCode.NotFound;
 			}
@@ -254,5 +274,66 @@ namespace Discord_WMP {
 				}
 			}
 		}
+
+		public static void Unhook() {
+			MediaKeys.UnhookWindowsHookEx(MediaKeys.hookId);
+		}
+	}
+	public class MediaKeys {
+		public static RemotedWindowsMediaPlayer rm;
+
+
+		public const int WH_KEYBOARD_LL = 13;
+		public const int WM_KEYDOWN = 0x0100;
+		public static IntPtr hookId = IntPtr.Zero;
+		public static IntPtr SetHook(LowLevelKeyboardProc proc) {
+			using(Process curProcess = Process.GetCurrentProcess())
+			using(ProcessModule curModule = curProcess.MainModule) {
+				return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
+			}
+		}
+
+		public delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+		public static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
+			if(nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN) {
+				int vkCode = Marshal.ReadInt32(lParam);
+				switch(vkCode) {
+					case (int)Keys.MediaPlayPause:
+						((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.play();
+						break;
+					case (int)Keys.MediaStop:
+						((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.stop();
+						break;
+					case (int)Keys.MediaNextTrack:
+						((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.next();
+						break;
+					case (int)Keys.MediaPreviousTrack:
+						((WMPLib.IWMPPlayer4)rm.GetOcx()).controls.previous();
+						break;
+				}
+			}
+			return CallNextHookEx(hookId, nCode, wParam, lParam);
+		}
+
+		[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+
+		[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+		[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+		[DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+		[DllImport("user32.dll")]
+		private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+		private const int KEYEVENTF_EXTENDEDKEY = 0x0001;
+		private const int KEYEVENTF_KEYUP = 0x0002;
+		private const byte VK_NUMLOCK = 0x90;
 	}
 }
