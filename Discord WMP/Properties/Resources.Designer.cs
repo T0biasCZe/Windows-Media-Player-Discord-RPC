@@ -61,7 +61,7 @@ namespace Discord_WMP.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 8119c66
+        ///   Looks up a localized string similar to 42979d1
         ///.
         /// </summary>
         public static string CurrentCommit {
