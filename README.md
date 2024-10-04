@@ -6,6 +6,9 @@
 * minimize onto tray to not take space on taskbar ~~(press minimize button on top right)~~ *minimizes automatically when you open some other software in 2.0*
 * smart album art manager
 
+On Windows 7, please install [.NET 4.8](https://dotnet.microsoft.com/en-us/download/dotnet-framework/thank-you/net48-web-installer)       
+On newer Windows, install [.NET 4.8.1](https://dotnet.microsoft.com/en-us/download/dotnet-framework/thank-you/net481-web-installer)
+
 https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/assets/44525446/994c0095-9755-4f90-8b92-f5e699c8d0a1
 
 
