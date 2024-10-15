@@ -14,6 +14,8 @@ https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/assets/44525446/99
 
 ![obrazek](https://user-images.githubusercontent.com/44525446/219905110-305fffc3-90f9-48e9-84b2-52595ea3bc7c.png)
 
+# Known Issues  
+* if you launch the program before Windows Media Player, it wont be able to read the playback info
 
 
 # Album art manager
