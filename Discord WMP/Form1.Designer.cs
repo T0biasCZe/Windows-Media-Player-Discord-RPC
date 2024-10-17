@@ -44,7 +44,6 @@
 			this.label2 = new System.Windows.Forms.Label();
 			this.linkLabel1 = new System.Windows.Forms.LinkLabel();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.checkBox_mediakeys = new System.Windows.Forms.CheckBox();
 			this.label7 = new System.Windows.Forms.Label();
 			this.label8 = new System.Windows.Forms.Label();
 			this.linkLabel2 = new System.Windows.Forms.LinkLabel();
@@ -228,18 +227,6 @@
 			// 
 			this.toolTip1.ToolTipTitle = "settings";
 			// 
-			// checkBox_mediakeys
-			// 
-			this.checkBox_mediakeys.AutoSize = true;
-			this.checkBox_mediakeys.Location = new System.Drawing.Point(76, 354);
-			this.checkBox_mediakeys.Name = "checkBox_mediakeys";
-			this.checkBox_mediakeys.Size = new System.Drawing.Size(101, 17);
-			this.checkBox_mediakeys.TabIndex = 27;
-			this.checkBox_mediakeys.Text = "Use media keys";
-			this.toolTip1.SetToolTip(this.checkBox_mediakeys, "Use media keys");
-			this.checkBox_mediakeys.UseVisualStyleBackColor = true;
-			this.checkBox_mediakeys.CheckedChanged += new System.EventHandler(this.checkBox_changed);
-			// 
 			// label7
 			// 
 			this.label7.AutoSize = true;
@@ -274,8 +261,7 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
-			this.ClientSize = new System.Drawing.Size(194, 124);
-			this.Controls.Add(this.checkBox_mediakeys);
+			this.ClientSize = new System.Drawing.Size(193, 123);
 			this.Controls.Add(this.linkLabel2);
 			this.Controls.Add(this.label8);
 			this.Controls.Add(this.label7);
@@ -331,7 +317,6 @@
 		private System.Windows.Forms.Label label7;
 		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.LinkLabel linkLabel2;
-		public System.Windows.Forms.CheckBox checkBox_mediakeys;
 	}
 }
 
