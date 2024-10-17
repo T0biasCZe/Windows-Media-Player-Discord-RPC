@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="RPC_ID" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">1076519967631093891</Value>
     </Setting>
     <Setting Name="show_progressbar" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>

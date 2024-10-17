@@ -465,12 +465,29 @@ namespace Discord_WMP {
 
                 if(!initialized) return;
 
+                if(client == null) {
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine("client is null");
+					Console.WriteLine("trying to reinitialize");
+                    try {
+                        Initialize();
+                    }
+                    catch(Exception ex){
+						Console.WriteLine("error while initializing client");
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(ex.ToString());
+						Console.ResetColor();
+						return;
+					}
+					Console.ResetColor();
+				}
+
                 client.SetPresence(new RichPresence() {
-                    Details = data.title.Truncate(32),
-                    State = data.artist.Truncate(32),
+                    Details = data.title.Truncate(32).Extend(3),
+                    State = data.artist.Truncate(32).Extend(3),
                     Assets = new Assets() {
                         LargeImageKey = albumart,
-                        LargeImageText = data.album.Truncate(32),
+                        LargeImageText = data.album.Truncate(32).Extend(3),
                         SmallImageKey = "wmp_icon"
                     },
                     Timestamps = new Timestamps() {
@@ -576,6 +593,10 @@ namespace Discord_WMP {
         public static string Truncate(this string value, int maxChars) {
             return value.Length <= maxChars ? value : value.Substring(0, maxChars);
         }
+        public static string Extend(this string value, int minChars) {
+            if (value.Length >= minChars) return value;
+			return value + new string(' ', minChars - value.Length);
+		}
 		public static bool In<T>(this T obj, params T[] args) {
 			return args.Contains(obj);
 		}
