@@ -265,7 +265,8 @@ namespace Discord_WMP {
 			use_rpc = checkBox_userpc.Checked;
 			Settings1.Default.show_discord = use_rpc;
             Settings1.Default.dont_hide = checkBox_dontautohide.Checked;
-            Settings1.Default.media_keys = checkBox_mediakeys.Checked;
+            //Settings1.Default.media_keys = checkBox_mediakeys.Checked;
+            Settings1.Default.media_keys = false;
 
 			var handle = GetConsoleWindow();
 			if(show_console) ShowWindow(handle, SW_SHOW);

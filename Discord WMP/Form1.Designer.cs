@@ -231,6 +231,7 @@
 			// checkBox_mediakeys
 			// 
 			this.checkBox_mediakeys.AutoSize = true;
+			this.checkBox_mediakeys.Enabled = false;
 			this.checkBox_mediakeys.Location = new System.Drawing.Point(76, 354);
 			this.checkBox_mediakeys.Name = "checkBox_mediakeys";
 			this.checkBox_mediakeys.Size = new System.Drawing.Size(101, 17);
