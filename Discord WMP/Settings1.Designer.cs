@@ -25,7 +25,7 @@ namespace Discord_WMP {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1076519967631093891")]
         public string RPC_ID {
             get {
                 return ((string)(this["RPC_ID"]));
