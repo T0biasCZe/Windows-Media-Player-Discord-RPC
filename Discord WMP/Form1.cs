@@ -16,15 +16,15 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using DiscordRPC;
 using DiscordRPC.Logging;
-using Windows.Media;
-using Windows.Media.Playback;
+/*using Windows.Media;
+using Windows.Media.Playback;*/
 using WMPLib;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Discord_WMP {
     public partial class Form1 : Form {
 
-        const string version = "v2.2.2c";
+        const string version = "v2.2.2b W7";
         const string date = "28.9.24";
 		string versionn = $"{Discord_WMP.Properties.Resources.CurrentCommit.Trim()} {version} {date}";
 
@@ -239,12 +239,14 @@ namespace Discord_WMP {
 			use_rpc = Settings1.Default.show_discord;
 			checkBox_userpc.Checked = use_rpc;
             checkBox_dontautohide.Checked = Settings1.Default.dont_hide;
+            checkBox_mediakeys.Checked = Settings1.Default.media_keys;
 
 			Console.WriteLine("loaded settings");
 			loadingsettings = false;
 		}
 		private void Form1_Closing(object sender, FormClosingEventArgs e) {
 			Console.WriteLine("saved settings");
+            systemMediaControls.Unhook();
 			//save settings
 			Settings1.Default.Save();
 			//close the console window
@@ -263,6 +265,7 @@ namespace Discord_WMP {
 			use_rpc = checkBox_userpc.Checked;
 			Settings1.Default.show_discord = use_rpc;
             Settings1.Default.dont_hide = checkBox_dontautohide.Checked;
+            Settings1.Default.media_keys = checkBox_mediakeys.Checked;
 
 			var handle = GetConsoleWindow();
 			if(show_console) ShowWindow(handle, SW_SHOW);
