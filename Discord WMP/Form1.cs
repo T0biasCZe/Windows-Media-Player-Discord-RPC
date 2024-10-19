@@ -24,8 +24,8 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 namespace Discord_WMP {
     public partial class Form1 : Form {
 
-        const string version = "v2.2.2c";
-        const string date = "28.9.24";
+        const string version = "v2.2.4b";
+        const string date = "19.10.24";
 		string versionn = $"{Discord_WMP.Properties.Resources.CurrentCommit.Trim()} {version} {date}";
 
 		public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
@@ -483,11 +483,11 @@ namespace Discord_WMP {
 				}
 
                 client.SetPresence(new RichPresence() {
-                    Details = data.title.Truncate(32).Extend(3),
-                    State = data.artist.Truncate(32).Extend(3),
+                    Details = data.title.Truncate(32).Extend(5),
+                    State = data.artist.Truncate(32).Extend(5),
                     Assets = new Assets() {
                         LargeImageKey = albumart,
-                        LargeImageText = data.album.Truncate(32).Extend(3),
+                        LargeImageText = data.album.Truncate(32).Extend(5),
                         SmallImageKey = "wmp_icon"
                     },
                     Timestamps = new Timestamps() {
@@ -595,7 +595,7 @@ namespace Discord_WMP {
         }
         public static string Extend(this string value, int minChars) {
             if (value.Length >= minChars) return value;
-			return value + new string(' ', minChars - value.Length);
+			return value + new string('​', minChars - value.Length);
 		}
 		public static bool In<T>(this T obj, params T[] args) {
 			return args.Contains(obj);
