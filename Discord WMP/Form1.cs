@@ -389,11 +389,20 @@ namespace Discord_WMP {
 		}
         public static bool check_discord_running() {
             //check if executable discord.exe, discordcanary.exe or discordptb.exe is running
-            Process[] pname = Process.GetProcessesByName("discord");
+            /*Process[] pname = Process.GetProcessesByName("discord");
             Process[] pname2 = Process.GetProcessesByName("discordcanary");
             Process[] pname3 = Process.GetProcessesByName("discordptb");
-            bool discordrunning = !(pname.Length == 0 && pname2.Length == 0 && pname3.Length == 0);
-            Console.BackgroundColor = ConsoleColor.Cyan;
+            bool discordrunning = !(pname.Length == 0 && pname2.Length == 0 && pname3.Length == 0);*/
+            List<string> discordFileNames = new List<string> { "discord", "discordcanary", "discordptb", "vesktop" };
+			bool discordrunning = false;
+            foreach(string name in discordFileNames) {
+				Process[] pname = Process.GetProcessesByName(name);
+				if(pname.Length != 0) {
+					discordrunning = true;
+					break;
+				}
+			}
+			Console.BackgroundColor = ConsoleColor.Cyan;
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("Discord running: " + discordrunning);
             Console.ResetColor();
