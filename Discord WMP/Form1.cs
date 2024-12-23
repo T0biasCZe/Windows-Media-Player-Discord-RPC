@@ -30,9 +30,12 @@ namespace Discord_WMP {
 
 		public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
 
-        public RemotedWindowsMediaPlayer rm = new RemotedWindowsMediaPlayer();
-        //RemotedWindowsMediaPlayer rm;
-        private bool show_author;
+        //public RemotedWindowsMediaPlayer rm = new RemotedWindowsMediaPlayer();
+        public RemotedWindowsMediaPlayer rm;
+        public bool wmpConnected = false;
+
+		//RemotedWindowsMediaPlayer rm;
+		private bool show_author;
         private bool show_title;
         private bool show_album;
         private bool show_albumart;
@@ -154,11 +157,6 @@ namespace Discord_WMP {
 			linkLabel2.Text = $"http://localhost:{random_port}/";
 			linkLabel2.Links.Add(0, linkLabel2.Text.Length, $"http://localhost:{random_port}/");
 
-			rm.Dock = DockStyle.Fill;
-
-            panel1.Controls.Add(rm);
-            panel1.Refresh();
-            panel1.Update();
             this.FormClosing += Form1_Closing;
             //change console size
 
@@ -299,6 +297,25 @@ namespace Discord_WMP {
 			System.Diagnostics.Process.Start(URL);
 		}
 
+        public bool ConnectWmp() {
+            //check if windows media player is running
+            Process[] pname = Process.GetProcessesByName("wmplayer");
+            if(pname.Length == 0) {
+                Console.WriteLine("Windows Media Player not running");
+                return false;
+            }
+            //check if remotedwindowsmediaplayer is already connected
+            if(wmpConnected == false) {
+                Console.WriteLine("WMP found, connecting to it");
+				rm = new RemotedWindowsMediaPlayer();
+                rm.Dock = DockStyle.Fill;
+                panel1.Controls.Add(rm);
+                panel1.Refresh();
+                panel1.Update();
+                wmpConnected = true;
+            }
+            return true;
+        }
 		public struct playback_data {
             public string title;
 			public string album;
@@ -413,7 +430,14 @@ namespace Discord_WMP {
         bool send_data_lasttime = false;
         Stopwatch pause_stopwatch = new Stopwatch();
 		private void update_Tick(object sender, EventArgs e) {
-            var data = Data();
+            bool wmpConnected = ConnectWmp();
+			if(!wmpConnected) {
+                Console.WriteLine("WMP not connected. WMP must be running. (debug: update_Tick() ConnectWmp() returned false))");
+				playeddata = "WMP not connected\nWMP must be running.";
+				this.Refresh();
+				return;
+			}
+			var data = Data();
             debug(data);
             if(data.lenght_sec == -1 || data.position_sec == -1) { 
                 playeddata = "Couldnt find WMP";

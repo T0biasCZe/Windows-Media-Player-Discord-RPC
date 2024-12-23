@@ -78,8 +78,7 @@ namespace Discord_WMP {
 			GetAlbumArt();
 
 			if(!server_running) {
-				server_running = true;
-				StartServer();
+				server_running = StartServer();
 			}
 			else {
 				checkRequests();
@@ -167,12 +166,30 @@ namespace Discord_WMP {
 		}
 
 		static HttpListener listener = new HttpListener();
-		static void StartServer() {
-			string prefix = $"http://localhost:{Form1.random_port}/";
-
-			listener.Prefixes.Add(prefix); // Add your localhost address
-			listener.Start();
-			Console.WriteLine("Listening on " + prefix);
+		static bool StartServer() {
+			try {
+				try {
+					listener.Prefixes.Clear();
+					listener.Close();
+					listener.Abort();
+				}
+				catch(Exception ex) {
+					Console.WriteLine("could not dispose listener:\n" + ex.ToString());
+				}
+				listener = new HttpListener();
+				string prefix = $"http://localhost:{Form1.random_port}/";
+				Console.WriteLine("STARTING HTTP SERVER ON " + prefix);
+				listener.Prefixes.Add(prefix); // Add your localhost address
+				listener.Start();
+				Console.WriteLine("Listening on " + prefix);
+				return true;
+			}
+			catch(Exception ex) {
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine("Failed to start server:\n" + ex.ToString());
+				Console.ResetColor();
+				return false;
+			}
 		}
 		static AsyncCallback callback = new AsyncCallback(ListenerCallback);
 		static void ListenerCallback(IAsyncResult result) {
