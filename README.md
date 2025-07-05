@@ -37,3 +37,7 @@ https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/assets/44525446/99
 
 
 if you do not want to use the custom album arts, you can use app id "1076519967631093891"
+
+# WMP Lyrics
+* My lyrics display software is bundled with the latest release
+* For more information see the [wmp lyrics repo readme](https://github.com/T0biasCZe/Windows-Media-Player-Lyrics/blob/master/README.md) 
