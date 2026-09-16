@@ -47,6 +47,7 @@
 			this.label7 = new System.Windows.Forms.Label();
 			this.label8 = new System.Windows.Forms.Label();
 			this.linkLabel2 = new System.Windows.Forms.LinkLabel();
+			this.checkBox_debugPrint = new System.Windows.Forms.CheckBox();
 			((System.ComponentModel.ISupportInitialize)(this.numericUpDown_retryattempts)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -256,12 +257,23 @@
 			this.linkLabel2.Text = "linkLabel2";
 			this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
 			// 
+			// checkBox_debugPrint
+			// 
+			this.checkBox_debugPrint.AutoSize = true;
+			this.checkBox_debugPrint.Location = new System.Drawing.Point(86, 280);
+			this.checkBox_debugPrint.Name = "checkBox_debugPrint";
+			this.checkBox_debugPrint.Size = new System.Drawing.Size(107, 17);
+			this.checkBox_debugPrint.TabIndex = 27;
+			this.checkBox_debugPrint.Text = "Print all track info";
+			this.checkBox_debugPrint.UseVisualStyleBackColor = true;
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
-			this.ClientSize = new System.Drawing.Size(193, 123);
+			this.ClientSize = new System.Drawing.Size(193, 472);
+			this.Controls.Add(this.checkBox_debugPrint);
 			this.Controls.Add(this.linkLabel2);
 			this.Controls.Add(this.label8);
 			this.Controls.Add(this.label7);
@@ -317,6 +329,7 @@
 		private System.Windows.Forms.Label label7;
 		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.LinkLabel linkLabel2;
+		private System.Windows.Forms.CheckBox checkBox_debugPrint;
 	}
 }
 

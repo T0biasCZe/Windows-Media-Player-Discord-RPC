@@ -1,0 +1,280 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMP Remote</title>
+    <link rel="stylesheet" type="text/css" href="wmp.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+        }
+
+        .metadata-container {
+            text-align: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        #coverArt {
+            width: 220px;
+            height: 220px;
+            object-fit: cover;
+            border: 2px solid #ccc;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+            background-color: #000;
+        }
+
+        #trackName {
+            margin: 8px 0 2px 0;
+            font-size: 16px;
+            color: #333;
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #bandName {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+            font-weight: normal;
+        }
+
+        /* Stream Activation Overlay */
+        .audio-prompt-overlay {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 220px;
+            height: 220px;
+            background: rgba(0, 0, 0, 0.65);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            cursor: pointer;
+            border: 2px solid #ccc;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .audio-prompt-btn {
+            background: #1f77d4;
+            border: 1px solid #115599;
+            color: white;
+            padding: 6px 12px;
+            font-size: 10pt;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="metadata-container">
+        <div id="audio-auth-overlay" class="audio-prompt-overlay" onclick="initializeAudioStream()">
+            <div style="font-size: 9pt; padding: 0 10px; text-align: center;">Click to connect audio</div>
+            <button class="audio-prompt-btn">Connect</button>
+        </div>
+
+        <img id="coverArt" src="/api/cover" alt="Album Art">
+        <h2 id="trackName">Loading...</h2>
+        <h3 id="bandName"></h3>
+    </div>
+
+    <div class="player-container-container" id="WMP_REMOTE">
+        <div class="player-container">
+            <audio id="sys-audio" class="audio-player" src="/api/audio" preload="metadata"></audio>
+
+            <div class="progress-container">
+                <input type="range" id="seek-bar" class="progress-bar" value="0" max="100" step="1">
+            </div>
+
+            <div class="controls">
+                <button id="btn-playpause" class="control-btn play-btn" onclick="togglePlay()"></button>
+
+                <button class="control-btn stop-btn" onclick="sendAction('stop')"></button>
+
+                <button class="control-btn prev-btn" onclick="sendAction('previous')"></button>
+
+                <button class="control-btn next-btn" onclick="sendAction('next')"></button>
+
+                <button id="btn-muteunmute" class="control-btn mute-btn" onclick="toggleMute()"></button>
+
+                <div class="volume-control">
+                    <input id="volume-slider" class="volume-slider" type="range" min="0" max="1" step="0.01" value="1">
+                </div>
+
+                <div class="track-time">
+                    <span id="currentTime" class="current-time">0:00</span>/<span id="durationTime" class="duration">0:00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var isDragging = false;
+        var audioInitialized = false;
+        var currentPlayState = "wmppsStopped";
+        var audioElement = document.getElementById("sys-audio");
+        var lastSongId = "";
+
+        function initializeAudioStream() {
+            if (audioInitialized) return;
+            audioElement.load();
+            var playPromise = audioElement.play();
+            if (playPromise !== undefined && playPromise.catch) {
+                playPromise.catch(function (error) {
+                    console.error("Audio initialization failed: " + error);
+                });
+            }
+            audioInitialized = true;
+            document.getElementById("audio-auth-overlay").style.display = "none";
+        }
+
+        function sendAction(action) {
+            var xhr = new XMLHttpRequest();
+            // Append Date.now() to bypass Windows Phone 8.1 aggressive XHR caching
+            var url = "/api/control?action=" + action + "&t=" + Date.now();
+            xhr.open("GET", url, true);
+
+            // Explicitly set headers to prevent caching
+            xhr.setRequestHeader("Cache-Control", "no-cache");
+            xhr.setRequestHeader("Pragma", "no-cache");
+
+            xhr.send();
+
+            if (action === "play") {
+                initializeAudioStream();
+                if (audioElement.paused) audioElement.play();
+            } else if (action === "pause" || action === "stop") {
+                audioElement.pause();
+            }
+        }
+
+        function togglePlay() {
+            if (currentPlayState === "wmppsPlaying") {
+                sendAction("pause");
+            } else {
+                sendAction("play");
+            }
+        }
+
+        function sendSeek(positionSec) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/api/control?pos=" + positionSec, true);
+            xhr.send();
+        }
+
+        function toggleMute() {
+            initializeAudioStream();
+            audioElement.muted = !audioElement.muted;
+            var muteBtn = document.getElementById("btn-muteunmute");
+            muteBtn.className = audioElement.muted ? "control-btn unmute-btn" : "control-btn mute-btn";
+        }
+
+        document.getElementById("volume-slider").addEventListener("input", function (e) {
+            audioElement.volume = e.target.value;
+        });
+
+        var seekBar = document.getElementById("seek-bar");
+        seekBar.addEventListener("mousedown", function () { isDragging = true; });
+        seekBar.addEventListener("mouseup", function (e) {
+            isDragging = false;
+            sendSeek(e.target.value);
+        });
+        seekBar.addEventListener("touchstart", function () { isDragging = true; });
+        seekBar.addEventListener("touchend", function (e) {
+            isDragging = false;
+            sendSeek(e.target.value);
+        });
+
+        function fetchStatus() {
+            var xhr = new XMLHttpRequest();
+            // Append a timestamp to force the browser to bypass its cache
+            var url = "/api/status?t=" + Date.now();
+            xhr.open("GET", url, true);
+
+            // Explicitly set cache-busting headers
+            xhr.setRequestHeader("Cache-Control", "no-cache");
+            xhr.setRequestHeader("Pragma", "no-cache");
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var xml = xhr.responseXML;
+                    if (!xml) return;
+
+                    var title = xml.getElementsByTagName("Title")[0].textContent || "Unknown Title";
+                    var artist = xml.getElementsByTagName("Artist")[0].textContent || "Unknown Artist";
+                    var posStr = xml.getElementsByTagName("Position")[0].textContent;
+                    var lenStr = xml.getElementsByTagName("Length")[0].textContent;
+                    var posSec = parseFloat(xml.getElementsByTagName("PositionSec")[0].textContent);
+                    var lenSec = parseFloat(xml.getElementsByTagName("LengthSec")[0].textContent);
+                    var state = xml.getElementsByTagName("PlayState")[0].textContent;
+                    var coverUrl = xml.getElementsByTagName("CoverUrl")[0].textContent;
+
+                    document.getElementById("trackName").innerText = title;
+                    document.getElementById("bandName").innerText = artist;
+                    document.getElementById("currentTime").innerText = posStr || "0:00";
+                    document.getElementById("durationTime").innerText = lenStr || "0:00";
+
+                    var coverImg = document.getElementById("coverArt");
+                    var currentCoverBase = coverImg.src.split('?')[0];
+                    if (currentCoverBase.indexOf("/api/cover") !== -1) {
+                        /*if (coverImg.getAttribute("data-last-url") !== coverUrl) {
+                            //coverImg.src = "/api/cover" + coverUrl.substring(1);
+                            //coverImg.setAttribute("data-last-url", coverUrl);
+                            var songId = title + "\n" + artist + "\n" + album;
+
+                            if (songId !== lastSongId) {
+                                coverImg.src = "/api/cover?t=" + Date.now();
+                                lastSongId = songId;
+                            }
+                        }*/
+                        var songId = title + "\n" + artist;
+
+                        if (songId !== lastSongId) {
+                            coverImg.src = "/api/cover?t=" + Date.now();
+                            lastSongId = songId;
+                        }
+                    }
+
+                    if (!isDragging && !isNaN(posSec) && !isNaN(lenSec) && lenSec > 0) {
+                        seekBar.max = lenSec;
+                        seekBar.value = posSec;
+                    }
+
+                    currentPlayState = state;
+                    var playBtn = document.getElementById("btn-playpause");
+                    if (state === "wmppsPlaying") {
+                        playBtn.className = "control-btn pause-btn";
+                        if (audioInitialized && audioElement.paused) {
+                            audioElement.play();
+                        }
+                    } else {
+                        playBtn.className = "control-btn play-btn";
+                        if (audioInitialized && !audioElement.paused) {
+                            audioElement.pause();
+                        }
+                    }
+                }
+            };
+            xhr.send();
+        }
+
+        setInterval(fetchStatus, 2000);
+        fetchStatus();
+    </script>
+</body>
+</html>

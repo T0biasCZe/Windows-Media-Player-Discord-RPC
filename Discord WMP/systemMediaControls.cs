@@ -122,6 +122,19 @@ namespace Discord_WMP {
 					break;
 
 			}
+			SystemMediaTransportControlsTimelineProperties timelineProperties = new SystemMediaTransportControlsTimelineProperties();
+			timelineProperties.Position = TimeSpan.FromSeconds(data.position_sec);
+
+			DateTime now = DateTime.UtcNow;
+			DateTime startTime = now - TimeSpan.FromSeconds(data.position_sec);
+			DateTime endTime = now + TimeSpan.FromSeconds(data.lenght_sec - data.position_sec);
+			timelineProperties.StartTime = startTime.TimeOfDay;
+			timelineProperties.EndTime = endTime.TimeOfDay;
+			timelineProperties.MinSeekTime = TimeSpan.Zero;
+			timelineProperties.MaxSeekTime = TimeSpan.FromSeconds(data.lenght_sec);
+
+			systemControls.UpdateTimelineProperties(timelineProperties);
+
 			systemControls.DisplayUpdater.MusicProperties.Title = data.title;
 			systemControls.DisplayUpdater.MusicProperties.Artist = data.artist;
 			systemControls.DisplayUpdater.MusicProperties.AlbumTitle = data.album;
@@ -218,22 +231,114 @@ namespace Discord_WMP {
 				listener.BeginGetContext(callback, listener);
 			}
 		}
-		static void ProcessRequest(HttpListenerContext context) {
-			string url = context.Request.Url.AbsolutePath;
-			if(url == "/") {
-				ProcessRequestImage(context);
-			}
-			else if(url == "/alive") {
-				ProcessRequestAlive(context);
-			}
-			else if(url == "/info") {
-				ProcessRequestInfo(context);
-			} 
-			else {
-				context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-			}
-		}
-		static void ProcessRequestInfo(HttpListenerContext context) {
+        static void ProcessRequest(HttpListenerContext context) {
+            string url = context.Request.Url.AbsolutePath;
+            if (url == "/") {
+                ProcessRequestImage(context);
+            }
+            else if (url == "/alive") {
+                ProcessRequestAlive(context);
+            }
+            else if (url == "/info") {
+                ProcessRequestInfo(context);
+            }
+            else if (url == "/api/status") {
+                ProcessRequestApiStatus(context);
+            }
+            else if (url == "/api/control") {
+                ProcessRequestApiControl(context);
+            }
+            else {
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+            }
+        }
+        static void ProcessRequestApiStatus(HttpListenerContext context) {
+            using (HttpListenerResponse response = context.Response) {
+                response.ContentType = "text/xml";
+
+                // Generate a cache-buster so the web browser updates the image when the song changes
+                string cacheBuster = DateTime.UtcNow.Ticks.ToString();
+
+                // Manually construct XML
+                string xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<PlaybackData>
+	<Title>{System.Security.SecurityElement.Escape(data.title ?? "")}</Title>
+	<Artist>{System.Security.SecurityElement.Escape(data.artist ?? "")}</Artist>
+	<Album>{System.Security.SecurityElement.Escape(data.album ?? "")}</Album>
+	<Length>{System.Security.SecurityElement.Escape(data.lenght ?? "")}</Length>
+	<Position>{System.Security.SecurityElement.Escape(data.position ?? "")}</Position>
+	<LengthSec>{data.lenght_sec}</LengthSec>
+	<PositionSec>{data.position_sec}</PositionSec>
+	<PlayState>{data.play_state}</PlayState>
+	<CoverUrl>/?t={cacheBuster}</CoverUrl>
+</PlaybackData>";
+
+                byte[] buffer = Encoding.UTF8.GetBytes(xml);
+                response.ContentLength64 = buffer.Length;
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+            }
+        }
+
+        static void ProcessRequestApiControl(HttpListenerContext context) {
+            using (HttpListenerResponse response = context.Response) {
+                string action = context.Request.QueryString["action"];
+                string posParam = context.Request.QueryString["pos"];
+
+                try {
+                    var controls = ((WMPLib.IWMPPlayer4)rm.GetOcx()).controls;
+                    bool handled = false;
+
+                    // Handle direct seeking/position updates
+                    if (!string.IsNullOrEmpty(posParam)) {
+                        if (double.TryParse(posParam, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double newPos)) {
+                            controls.currentPosition = newPos;
+                            handled = true;
+                        }
+                        else {
+                            response.StatusCode = (int)HttpStatusCode.BadRequest;
+                            response.ContentLength64 = 0;
+                            return;
+                        }
+                    }
+
+                    // Handle playback state actions
+                    if (!string.IsNullOrEmpty(action)) {
+                        switch (action.ToLower()) {
+                            case "play":
+                                controls.play();
+                                break;
+                            case "pause":
+                                controls.pause();
+                                break;
+                            case "stop":
+                                controls.stop();
+                                break;
+                            case "next":
+                                controls.next();
+                                break;
+                            case "previous":
+                                controls.previous();
+                                break;
+                        }
+                        handled = true;
+                    }
+
+                    if (handled) {
+                        response.StatusCode = (int)HttpStatusCode.OK;
+                    }
+                    else {
+                        response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    }
+                }
+                catch (Exception ex) {
+                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    Console.WriteLine("API Control error: " + ex.Message);
+                }
+
+                response.ContentLength64 = 0;
+            }
+        }
+        static void ProcessRequestInfo(HttpListenerContext context) {
 			//return string with info about current song in format "Title\nArtist\nAlbum"
 			using(HttpListenerResponse response = context.Response) {
 				response.ContentType = "text/plain";

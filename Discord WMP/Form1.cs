@@ -24,8 +24,8 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 namespace Discord_WMP {
     public partial class Form1 : Form {
 
-        const string version = "v2.2.4b";
-        const string date = "19.10.24";
+        const string version = "v2.2.5";
+        const string date = "5.7.2025";
 		string versionn = $"{Discord_WMP.Properties.Resources.CurrentCommit.Trim()} {version} {date}";
 
 		public static string url = "https://github.com/T0biasCZe/Windows-Media-Player-Discord-RPC/";
@@ -320,6 +320,7 @@ namespace Discord_WMP {
             public string title;
 			public string album;
 			public string artist;
+            public string Interpret;
             public string audiofilename;
             public string audiofilepath;
 
@@ -329,7 +330,7 @@ namespace Discord_WMP {
 			public double position_sec;
             public WMPLib.WMPPlayState play_state;
 
-            public string guid;
+			public string guid;
             public string path;
             public string media_type;
 		}
@@ -368,20 +369,46 @@ namespace Discord_WMP {
                     data.title = player.currentMedia.getItemInfo("Title");
                     data.album = player.currentMedia.getItemInfo("WM/AlbumTitle");
                     data.artist = player.currentMedia.getItemInfo("WM/AlbumArtist");
-                    data.audiofilepath = player.controls.currentItem.sourceURL;
+                    if(data.artist == "") {
+                        data.artist = player.currentMedia.getItemInfo("Author");
+					}
+                    if(data.artist == "") {
+                        data.artist = player.currentMedia.getItemInfo("WM/Composer");
+                    }
+                    if(data.artist == "") {
+                        data.artist = player.currentMedia.getItemInfo("WM/Artist");
+                    }
+                    if(data.artist == "") {
+                        data.artist = player.currentMedia.getItemInfo("WM/Provider");
+                    }
+                    if(data.artist == "") {
+                        data.artist = player.currentMedia.getItemInfo("Author");
+                    }
+                    if(data.artist == "") {
+                        data.artist = player.currentMedia.getItemInfo("Interpret");
+					}
+
+					data.audiofilepath = player.controls.currentItem.sourceURL;
                     //get filename from the path
                     data.audiofilename = Path.GetFileName(data.audiofilepath);
                     data.lenght = player.currentMedia.durationString;
                     data.position = player.controls.currentPositionString;
+
                     data.lenght_sec = player.currentMedia.duration;
                     data.position_sec = player.controls.currentPosition;
-                    data.play_state = player.playState;
+
+					//get min and max seek time and start and end time
+
+					data.play_state = player.playState;
                     data.guid = player.currentMedia.getItemInfo("WMCollectionID");
                     data.path = player.currentMedia.sourceURL;
                     data.media_type = player.currentMedia.getItemInfo("MediaType");
 
+                    if(checkBox_debugPrint.Checked) DebugPrint(player);
 
-                    break;
+
+
+					break;
                 }
                 catch {
                     retrycount++;
@@ -396,7 +423,35 @@ namespace Discord_WMP {
         abort:;
             return data;
         }
-        //displays the current information from Windows Media Player
+
+		private void DebugPrint(WMPLib.IWMPPlayer4 player) {
+			if(player == null || player.currentMedia == null) {
+				Console.WriteLine("No media loaded.");
+				return;
+			}
+
+			string[] attributes = new string[]
+			{
+        // Audio track attributes
+        "AcquisitionTime", "AlternateSourceURL", "AlbumID", "AlbumIDAlbumArtist", "Author", "AverageLevel", "Bitrate", "BuyNow", "BuyTickets", "Channels", "Copyright", "CurrentBitrate", "DLNAServerUDN", "DLNASourceURI", "DTCPIPHost", "DTCPIPPort", "Duration", "FileSize", "FileType", "Is_Protected", "IsVBR", "LibraryID", "LibraryName", "MediaType", "MoreInfo", "PartOfSet", "PeakValue", "PlaylistIndex", "ProviderLogoURL", "ProviderURL", "RecordingTime", "RecordingTimeDay", "RecordingTimeMonth", "RecordingTimeYear", "RecordingTimeYearMonth", "RecordingTimeYearMonthDay", "ReleaseDate", "ReleaseDateDay", "ReleaseDateMonth", "ReleaseDateYear", "ReleaseDateYearMonth", "ReleaseDateYearMonthDay", "RequestState", "ShadowFilePath", "SourceURL", "SyncState", "Title", "TrackingID", "UserCustom1", "UserCustom2", "UserEffectiveRating", "UserLastPlayedTime", "UserPlayCount", "UserPlaycountAfternoon", "UserPlaycountEvening", "UserPlaycountMorning", "UserPlaycountNight", "UserPlaycountWeekday", "UserPlaycountWeekend", "UserRating", "UserServiceRating", "WM/AlbumArtist", "WM/AlbumCoverURL", "WM/AlbumTitle", "WM/Category", "WM/Composer", "WM/Conductor", "WM/ContentDistributor", "WM/ContentGroupDescription", "WM/EncodingTime", "WM/Genre", "WM/GenreID", "WM/InitialKey", "WM/Language", "WM/Lyrics", "WM/MCDI", "WM/MediaClassPrimaryID", "WM/MediaClassSecondaryID", "WM/Mood", "WM/ParentalRating", "WM/Period", "WM/ProtectionType", "WM/Provider", "WM/ProviderRating", "WM/ProviderStyle", "WM/Publisher", "WM/SubscriptionContentID", "WM/SubTitle", "WM/TrackNumber", "WM/UniqueFileIdentifier", "WM/WMCollectionGroupID", "WM/WMCollectionID", "WM/WMContentID", "WM/Writer", "WM/Year",
+        // CD track attributes
+        "Actor", "Album", "AlbumArtist", "Artist", "Author", "BuyNow", "Caption", "CDTrackEnabled", "Composer", "Copyright", "Genre", "Label", "Lyrics", "MetadataSource", "ModifiedBy", "MoreInfo", "Name", "OriginalIndex", "Period", "PlaylistIndex", "Rating", "ReleaseDate", "ReleaseDateDay", "ReleaseDateMonth", "ReleaseDateYear", "ReleaseDateYearMonth", "ReleaseDateYearMonthDay", "ReleasedBy", "Series", "Studio", "Style", "Title", "TOC", "TotalDuration", "UniqueFileIdentifier", "WM/AlbumArtist", "WM/AlbumTitle", "WM/Composer", "WM/Genre", "WM/Lyrics", "WM/MCDI", "WM/Period", "WM/Provider", "WM/ProviderRating", "WM/ProviderStyle", "WM/Publisher", "WM/TrackNumber", "WM/UniqueFileIdentifier", "WM/WMContentID"
+			};
+
+			Console.WriteLine("---- Media Attributes ----");
+			foreach(var attr in attributes.Distinct()) {
+				try {
+					string value = player.currentMedia.getItemInfo(attr);
+					if(!string.IsNullOrEmpty(value))
+						Console.WriteLine($"{attr}: {value}");
+				}
+				catch(Exception ex) {
+					Console.WriteLine($"{attr}: [Error: {ex.Message}]");
+				}
+			}
+			Console.WriteLine("-------------------------");
+		}
+		//displays the current information from Windows Media Player
 		private void debug(playback_data data) {
             label3.Text = "initialized " + initialized.ToString();
             label4.Text = "send_data_lasttime " + send_data_lasttime.ToString();

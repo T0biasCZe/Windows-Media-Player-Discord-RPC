@@ -132,7 +132,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings1.settings</DependentUpon>
     </Compile>
-    <Compile Include="systemMediaControls.cs" />
     <EmbeddedResource Include="AlbumArtAdder.resx">
       <DependentUpon>AlbumArtAdder.cs</DependentUpon>
     </EmbeddedResource>
